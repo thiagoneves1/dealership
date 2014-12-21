@@ -5,17 +5,35 @@
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
-        android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
-            android:name=".MyActivity"
-            android:label="@string/app_name" >
+            android:name="br.tecsinapse.checklist.SplashScreenActivity"
+
+            >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name="br.tecsinapse.checklist.Coletor"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            >
+        </activity>
+        <activity
+            android:name="br.tecsinapse.dealer.dealerships.JsonResposta"
+            android:label="@string/title_activity_activity_resposta" >
+        </activity>
+        <activity
+            android:name="br.tecsinapse.checklist.Sincronizar"
+            android:label="@string/title_activity_sincronizar" >
+        </activity>
+        <activity
+            android:name="br.tecsinapse.checklist.ListaItens"
+            >
+        </activity>
     </application>
+
 
 </manifest>

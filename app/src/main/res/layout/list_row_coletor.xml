@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:background="@color/ghostwhite"
+              android:layout_width="match_parent"
+              android:padding="2dp"
+              android:layout_height="match_parent">
+
+    <TextView
+        android:background="@color/cinza_escuro"
+        android:textColor="@color/ghostwhite"
+        android:padding="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="MANUAIS E SERVIÇOS"
+        android:gravity="center"
+        android:id="@+id/text_view_titulo_categoria"/>
+
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                  android:orientation="horizontal"
+                  android:background="@color/ghostwhite"
+                  android:layout_width="match_parent"
+                  android:paddingTop="10dp"
+                  android:paddingLeft="4dp"
+                  android:paddingRight="4dp"
+                  android:paddingBottom="4dp"
+                  android:gravity="center_vertical"
+                  android:layout_height="wrap_content">
+        <TextView
+            android:layout_width="35dp"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="001"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="4dp"
+            android:textStyle="bold"
+            android:gravity="center_vertical"
+            android:lines="3"
+            android:text="Entrega do Proprietário"
+            android:layout_weight="1"/>
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:padding="4dp"
+            android:background="@drawable/ic_action_edit"
+            />
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:padding="4dp"
+            android:background="@drawable/ic_camera_requerido"
+            />
+
+        </LinearLayout>
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                  android:orientation="horizontal"
+                  android:background="@color/ghostwhite"
+                  android:layout_width="match_parent"
+                  android:paddingTop="10dp"
+                  android:paddingLeft="4dp"
+                  android:paddingRight="4dp"
+                  android:paddingBottom="4dp"
+                  android:layout_height="wrap_content">
+    <RadioGroup
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@color/cinza"
+        android:orientation="vertical"
+        android:gravity="left"
+        android:layout_weight="1"
+        >
+        <RadioButton
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Opcao 1ere"
+            android:background="@color/ghostwhite"
+            />
+        <RadioButton
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Opcao 1"
+            android:background="@color/ghostwhite"
+            />
+        <RadioButton
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Opcao 1"
+            android:layout_marginTop="1dp"
+            android:background="@color/ghostwhite"
+            />
+
+
+        </RadioGroup>
+
+        <RadioGroup
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@color/amarelo"
+            android:orientation="vertical"
+            android:gravity="left"
+            android:layout_weight="1"
+            >
+            <RadioButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Opcao 1"
+                />
+            <RadioButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Opcao 1"
+                />
+            <RadioButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Opcao 1"
+                />
+
+
+        </RadioGroup>
+
+
+    </LinearLayout>
+</LinearLayout>

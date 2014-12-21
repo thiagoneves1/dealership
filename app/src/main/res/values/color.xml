@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="ghostwhite" type="color">#f8f8ff</item>
+    <item name="vermelho" type="color">#FF0000</item>
+    <item name="amarelo" type="color">#fffff90d</item>
+    <item name="verde" type="color">#ff3bff24</item>
+    <item name="azul_claro" type="color">#BCDFED</item>
+    <item name="preto" type="color">#ff000000</item>
+    <item name="ciano" type="color">#03A9F4</item>
+    <item name="azul_escuro" type="color">#0288D1</item>
+    <item name="cinza" type="color">#878787</item>
+    <item name="cinza_escuro" type="color">#444444</item>
+    <item name="pardo" type="color">#EFEFEF</item>
+
+
+</resources>
