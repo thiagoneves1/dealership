@@ -25,14 +25,8 @@ public class Constantes {
     public static final String ERRO_AO_SALVAR_IMAGEM = "Erro ao Salvar Imagem";
     public static final int COR_VERMELHO = R.color.vermelho;
     public static final int COR_AMARELO = R.color.amarelo;
-    public static final int COR_VERDE = R.color.verde;
-    public static final int COR_CIANO = R.color.ciano;
     public static final int COR_AZUL_CLARO = R.color.azul_claro;
-    public static final int COR_BRANCO = R.color.ghostwhite;
     public static final int COR_CINZA_ESCURO = R.color.cinza_escuro;
-    public static final int COR_CINZA = R.color.cinza;
-    public static final int TAMANHO_TEXTO_TITULO = 19;
-    public static final int TAMANHO_TEXTO_SUBTITULO = 15;
     public static final int VALOR_CONDICIONAL_FALSE = 0;
     public static final int VALOR_CONDICIONAL_TRUE = 1;
     public static final int VALOR_ITEM_JA_VERIFICADO_TRUE = 1;
@@ -40,18 +34,10 @@ public class Constantes {
     public static final int VALOR_OPCIONAL_TRUE = 1;
     public static final int VALOR_RESPONDIDA_FALSE =0;
     public static final int VALOR_RESPONDIDA_TRUE = 1;
-    public static final int VALOR_ALTURA_LAYOUT_DE_STATUS = 5;
-    public static final int TAMANHO_TEXTO_CATEGORIA =17;
-    public static final int DIFERENCA_ID_ITEM_E_LAYOUT = 100;
     public static final int CODIGO_IMAGEM_CAPTURA_FOTO = 200;
-    public static final int LARGURA_CAMPO_TEXTO = 200;
     public static final int VALOR_INICIAL_PROGRESSO_ITEM = 0;
     public static final int VALOR_INICIAL_STATUS = 0;
-
-
     public static final String TITULO_LISTA_ITENS = "QUESTIONÁRIOS";
-
-
     public static final String ERRO_AO_SALVAR_ITENS = "Erro ao salvar Respostas";
 
 }

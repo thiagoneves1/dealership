@@ -6,6 +6,12 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
+import br.tecsinapse.checklist.entidades.Categoria;
+import br.tecsinapse.checklist.entidades.Condicao;
+import br.tecsinapse.checklist.entidades.ItemChecagem;
+import br.tecsinapse.checklist.entidades.ItemChecagemDaCategoria;
+import br.tecsinapse.checklist.entidades.Opcao;
+import br.tecsinapse.checklist.entidades.Resposta;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,9 +26,8 @@ public class DataBaseHelper extends SQLiteOpenHelper {
     }
 
     @Override
-    public void onCreate(SQLiteDatabase db)
-    {
-        String sqlItem ="CREATE TABLE IF NOT EXISTS itemChecagem " +
+    public void onCreate(SQLiteDatabase db) {
+        String sqlItem = "CREATE TABLE IF NOT EXISTS itemChecagem " +
                 "(id INTEGER PRIMARY KEY, " +
                 "idExterno INTEGER, tituloItem TEXT, app TEXT, status INTEGER, data TEXT, progresso INTEGER)";
 
@@ -77,8 +82,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         String query = "SELECT caminhoArquivo FROM foto WHERE id =" + id;
         Cursor cursor = db.rawQuery(query, null);
-        if (cursor.moveToNext())
-        {
+        if (cursor.moveToNext()) {
             return cursor.getString(0);
         }
         db.close();
@@ -91,12 +95,11 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         String query = "SELECT id FROM foto WHERE idItemChecagem =" + idItemChecagem;
         Cursor cursor = db.rawQuery(query, null);
-        while (cursor.moveToNext())
-        {
+        while (cursor.moveToNext()) {
             listaIdFotos.add(cursor.getInt(0));
         }
         db.close();
-        return  listaIdFotos;
+        return listaIdFotos;
 
     }
 
@@ -104,23 +107,22 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
-        values.put("idItemChecagem",idRespostaParaFoto);
-        values.put("caminhoArquivo",caminhoFoto);
+        values.put("idItemChecagem", idRespostaParaFoto);
+        values.put("caminhoArquivo", caminhoFoto);
         db.insert("foto", null, values);
         db.close();
 
     }
 
-    public long insereItemChecagem(int idExterno, String tituloChecagem, String app, String data)
-    {
+    public long insereItemChecagem(int idExterno, String tituloChecagem, String app, String data) {
         Log.i("BANCO", String.valueOf(idExterno) + " - " + tituloChecagem);
         long retorno;
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put("idExterno", idExterno);
-        values.put("tituloItem",tituloChecagem);
+        values.put("tituloItem", tituloChecagem);
         values.put("app", app);
-        values.put("status",Constantes.VALOR_INICIAL_STATUS);//sempre com status 0
+        values.put("status", Constantes.VALOR_INICIAL_STATUS);//sempre com status 0
         Log.i("DataBaseHelper", data);
         values.put("data", data);
         values.put("progresso", Constantes.VALOR_INICIAL_PROGRESSO_ITEM);
@@ -130,14 +132,12 @@ public class DataBaseHelper extends SQLiteOpenHelper {
     }
 
 
-
-    public long insereCatetoria(String nomeCategoria, long idItemChecagem)
-    {
+    public long insereCatetoria(String nomeCategoria, long idItemChecagem) {
         long retorno;
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
-        values.put("idItem",idItemChecagem);
-        values.put("nomeCategoria",nomeCategoria);
+        values.put("idItem", idItemChecagem);
+        values.put("nomeCategoria", nomeCategoria);
         retorno = db.insert("categoria", null, values);
         db.close();
         return retorno;
@@ -147,57 +147,53 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         long retorno;
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
-        values.put("idCategoria",idCategoria);
-        values.put("itemTitulo",tituloItemDaCategoria);
-        values.put("idExternoItemDaCategoria",idExternoItemDaCategoria);
+        values.put("idCategoria", idCategoria);
+        values.put("itemTitulo", tituloItemDaCategoria);
+        values.put("idExternoItemDaCategoria", idExternoItemDaCategoria);
         retorno = db.insert("itemDaCategoria", null, values);
         db.close();
         return retorno;
     }
 
-    public List<Integer> obterListaIdExterno(){
+    public List<Integer> obterListaIdExterno() {
         List<Integer> valores = new ArrayList<Integer>();
         SQLiteDatabase db = this.getWritableDatabase();
         String query = "SELECT idExterno FROM itemChecagem";
         Cursor cursor = db.rawQuery(query, null);
-        while (cursor.moveToNext())
-            {
-                valores.add(cursor.getInt(0));
-            }
+        while (cursor.moveToNext()) {
+            valores.add(cursor.getInt(0));
+        }
         db.close();
         return valores;
-        }
+    }
 
-    public List<String> obterListaTituloItemChecagem()
-    {
+    public List<String> obterListaTituloItemChecagem() {
         List<String> valores = new ArrayList<String>();
         SQLiteDatabase db = this.getWritableDatabase();
         String query = "SELECT tituloItem FROM itemChecagem";
         Cursor cursor = db.rawQuery(query, null);
-        while (cursor.moveToNext())
-            {
-                valores.add(cursor.getString(0));
-            }
+        while (cursor.moveToNext()) {
+            valores.add(cursor.getString(0));
+        }
         db.close();
         return valores;
     }
 
-    public int obetStatus(int idExterno){
-        int retorno=2;
+    public int obetStatus(int idExterno) {
+        int retorno = 2;
         SQLiteDatabase db = this.getWritableDatabase();
-        String query = "SELECT status FROM itemChecagem WHERE idExterno =" +idExterno;
+        String query = "SELECT status FROM itemChecagem WHERE idExterno =" + idExterno;
         Cursor cursor = db.rawQuery(query, null);
-        while (cursor.moveToNext())
-            {
-                retorno = cursor.getInt(0);
-            }
+        while (cursor.moveToNext()) {
+            retorno = cursor.getInt(0);
+        }
         db.close();
         return retorno;
     }
 
-    public ItemChecagem obterItemChecagem(int idExterno){
+    public ItemChecagem obterItemChecagem(int idExterno) {
         SQLiteDatabase db = this.getWritableDatabase();
-        String query = "SELECT * FROM itemChecagem WHERE idExterno =" +idExterno;
+        String query = "SELECT * FROM itemChecagem WHERE idExterno =" + idExterno;
         Cursor cursor = db.rawQuery(query, null);
         if (cursor != null)
             cursor.moveToFirst();
@@ -225,8 +221,8 @@ public class DataBaseHelper extends SQLiteOpenHelper {
             condicao.setIdRespostaEmCondicional(cursor.getInt(2));
             condicao.setValorResposta(cursor.getString(3));
         }
-       db.close();
-        return  condicao;
+        db.close();
+        return condicao;
     }
 
     public List<Categoria> obterListaCategorias(int idItemChecagem) {
@@ -234,34 +230,32 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         String query = "SELECT * FROM categoria WHERE idItem =" + idItemChecagem;
         Cursor cursor = db.rawQuery(query, null);
-        while (cursor.moveToNext())
-            {
-                Categoria categoria = new Categoria();
-                categoria.setId(cursor.getInt(0));
-                categoria.setIdItem(cursor.getInt(1));
-                categoria.setNome(cursor.getString(2));
-                listaCategorias.add(categoria);
-            }
+        while (cursor.moveToNext()) {
+            Categoria categoria = new Categoria();
+            categoria.setId(cursor.getInt(0));
+            categoria.setIdItem(cursor.getInt(1));
+            categoria.setNome(cursor.getString(2));
+            listaCategorias.add(categoria);
+        }
         db.close();
-        return  listaCategorias;
+        return listaCategorias;
     }
 
-    public List<ItemChecagemDaCategoria> obterListaItemDaCategoria(int idCategoria)  {
+    public List<ItemChecagemDaCategoria> obterListaItemDaCategoria(int idCategoria) {
         List<ItemChecagemDaCategoria> listaChecagem = new ArrayList<ItemChecagemDaCategoria>();
         SQLiteDatabase db = this.getWritableDatabase();
         String query = "SELECT * FROM itemDaCategoria WHERE idCategoria =" + idCategoria;
         Cursor cursor = db.rawQuery(query, null);
-        while (cursor.moveToNext())
-            {
-                ItemChecagemDaCategoria ic = new ItemChecagemDaCategoria();
-                ic.setId(cursor.getInt(0));
-                ic.setIdCategoria(cursor.getInt(1));
-                ic.setTitulo(cursor.getString(2));
-                ic.setIdExternoItemDaCategoria(cursor.getInt(3));
-                listaChecagem.add(ic);
-            }
+        while (cursor.moveToNext()) {
+            ItemChecagemDaCategoria ic = new ItemChecagemDaCategoria();
+            ic.setId(cursor.getInt(0));
+            ic.setIdCategoria(cursor.getInt(1));
+            ic.setTitulo(cursor.getString(2));
+            ic.setIdExternoItemDaCategoria(cursor.getInt(3));
+            listaChecagem.add(ic);
+        }
         db.close();
-        return  listaChecagem;
+        return listaChecagem;
     }
 
     public List<Resposta> obterListaRespostasDoItem(int id) {
@@ -269,8 +263,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         String query = "SELECT * FROM valorResposta WHERE idItemDaCategoria =" + id;
         Cursor cursor = db.rawQuery(query, null);
-        while (cursor.moveToNext())
-        {
+        while (cursor.moveToNext()) {
             Resposta resposta = new Resposta();
             resposta.setId(cursor.getInt(0));
             resposta.setIdExterno(cursor.getInt(1));
@@ -285,13 +278,13 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         db.close();
         return listaResposta;
     }
+
     public List<ItemChecagem> obterListaItemChecagem() {
         List<ItemChecagem> listaItemChecagem = new ArrayList<ItemChecagem>();
         SQLiteDatabase db = this.getWritableDatabase();
         String query = "SELECT * FROM itemChecagem";
         Cursor cursor = db.rawQuery(query, null);
-        while (cursor.moveToNext())
-        {
+        while (cursor.moveToNext()) {
             ItemChecagem itemChecagem = new ItemChecagem();
             itemChecagem.setId(cursor.getInt(0));
             itemChecagem.setIdExterno(cursor.getInt(1));
@@ -310,8 +303,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         String query = "SELECT * FROM opcao WHERE idResposta =" + id;
         Cursor cursor = db.rawQuery(query, null);
-        while (cursor.moveToNext())
-        {
+        while (cursor.moveToNext()) {
             Opcao opcao = new Opcao();
             opcao.setId(cursor.getInt(0));
             opcao.setIdResposta(cursor.getInt(1));
@@ -326,13 +318,13 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         long retorno;
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
-        values.put("idItemDaCategoria",idItemDaCategoria);
+        values.put("idItemDaCategoria", idItemDaCategoria);
         values.put("idExterno", idExterno);
         values.put("tipo", tipo);
-        values.put("opcional",valorOpcional);
-        values.put("condicional",valorCondicional);
-        values.put("respondida",0);//default
-        retorno =db.insert("valorResposta",null,values);
+        values.put("opcional", valorOpcional);
+        values.put("condicional", valorCondicional);
+        values.put("respondida", 0);//default
+        retorno = db.insert("valorResposta", null, values);
         db.close();
         return retorno;
     }
@@ -341,10 +333,10 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         long retorno;
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
-        values.put("idResposta",idPerguntaDoItem);
-        values.put("valorTexto",texto);
-        values.put("valorResposta",resposta);
-        retorno = db.insert("opcao",null,values);
+        values.put("idResposta", idPerguntaDoItem);
+        values.put("valorTexto", texto);
+        values.put("valorResposta", resposta);
+        retorno = db.insert("opcao", null, values);
         db.close();
         return retorno;
     }
@@ -352,10 +344,10 @@ public class DataBaseHelper extends SQLiteOpenHelper {
     public void insereCondicao(long idRespostaDoItemNaoVisivel, long idRespostaQueDependo, String valorResposta) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
-        values.put("idResposta",idRespostaDoItemNaoVisivel);
-        values.put("idRespostaEmCondicional",idRespostaQueDependo);
-        values.put("valorResposta",valorResposta);
-        db.insert("condicao", null,values);
+        values.put("idResposta", idRespostaDoItemNaoVisivel);
+        values.put("idRespostaEmCondicional", idRespostaQueDependo);
+        values.put("valorResposta", valorResposta);
+        db.insert("condicao", null, values);
         db.close();
 
     }
@@ -375,18 +367,18 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put("status", 1);
-        db.update("itemChecagem", values,filtro,null);
+        db.update("itemChecagem", values, filtro, null);
         db.close();
     }
+
     public void atualizaValorProgressoDoitem(int idExterno, int valorProgresso) {
         String filtro = "idExterno=" + idExterno;
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put("progresso", valorProgresso);
-        db.update("itemChecagem", values,filtro,null);
+        db.update("itemChecagem", values, filtro, null);
         db.close();
     }
-
 
 
     public List<Categoria> obterCategoriasRespondidasDoApp(int idItemChecagem) {
@@ -394,8 +386,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         String query = "SELECT * FROM categoria WHERE idItem =" + idItemChecagem;
         Cursor cursor = db.rawQuery(query, null);
-        while (cursor.moveToNext())
-        {
+        while (cursor.moveToNext()) {
             Categoria categoria = new Categoria();
             categoria.setId(cursor.getInt(0));
             categoria.setIdItem(cursor.getInt(1));
@@ -403,7 +394,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
             listaCategorias.add(categoria);
         }
         db.close();
-        return  listaCategorias;
+        return listaCategorias;
     }
 
     public int obterIdItemChecagem(String nomeApp) {
@@ -427,9 +418,8 @@ public class DataBaseHelper extends SQLiteOpenHelper {
             return cursor.getString(0);
         }
         db.close();
-       return null;
+        return null;
     }
-
 
 
 }

@@ -27,8 +27,8 @@ public class SplashScreenActivity extends ActionBarActivity {
 
       utilitario = new Utilitario(SplashScreenActivity.this);
 
-      progressBar = (ProgressBar) findViewById(R.id.progressBar);
-      textViewProgress = (TextView) findViewById(R.id.txt_progress);
+        progressBar = (ProgressBar) findViewById(R.id.progressBar);
+        textViewProgress = (TextView) findViewById(R.id.txt_progress);
 
       new CarregaDados().execute();
 
@@ -39,7 +39,7 @@ public class SplashScreenActivity extends ActionBarActivity {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            // before making http calls
+
 
         }
 

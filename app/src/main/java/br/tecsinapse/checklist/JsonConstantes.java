@@ -17,7 +17,6 @@ public class JsonConstantes {
     public static final String JSON_ALTERNATIVAS = "alternativas";
     public static final String JSON_OPCOES = "opcoes";
     public static final String JSON_TEXTO = "texto";
-    public static final String JSON_ID_EXTERNO = "idExterno";
     public static final String JSON_APP_NOME = "App";
     public static final String JSON_APP_ID = "id-checklist";
     public static final String JSON_VALORES = "valores";

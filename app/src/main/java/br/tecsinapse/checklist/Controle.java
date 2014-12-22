@@ -10,6 +10,9 @@ import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import br.com.dealer.dealerships.R;
+import br.tecsinapse.checklist.entidades.Categoria;
+import br.tecsinapse.checklist.entidades.ItemChecagemDaCategoria;
+import br.tecsinapse.checklist.entidades.Resposta;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -37,12 +40,12 @@ public class Controle {
         boolean retorno;
         listaIdExterno = banco.obterListaIdExterno(); //lista somente pra ver se tem o id dentro do banco
 
-            try {
-                retorno = verificaSeItemExisteESalva(json);
-            } catch (JSONException e) {
-                e.printStackTrace();
-                return false;
-            }
+        try {
+            retorno = verificaSeItemExisteESalva(json);
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return false;
+        }
         return retorno;
     }
 
@@ -112,7 +115,7 @@ public class Controle {
 
     private void salvaRespostasDoItem(long idItemDaCategoria, JSONArray jsonPerguntasDoItemDaCategoria, int qtdPerguntasNoItem) throws JSONException {
         long idRespostaDoItem;
-        HashMap<Integer,Long> mapaIdExternoEIdInterno = new HashMap<Integer, Long>();
+        HashMap<Integer, Long> mapaIdExternoEIdInterno = new HashMap<Integer, Long>();
         for (int c = 0; c < qtdPerguntasNoItem; c++) {
             JSONObject objectPerguntaDoItem = jsonPerguntasDoItemDaCategoria.getJSONObject(c);
             int idExternoResposta = objectPerguntaDoItem.getInt(JsonConstantes.JSON_ID);
@@ -122,31 +125,31 @@ public class Controle {
 
             int valorOpcional = Constantes.VALOR_OPCIONAL_FALSE;
 
-                if (opcional.equals("true")) {
-                    valorOpcional = Constantes.VALOR_OPCIONAL_TRUE;
-                }
+            if (opcional.equals("true")) {
+                valorOpcional = Constantes.VALOR_OPCIONAL_TRUE;
+            }
 
             String condicional;
             condicional = objectPerguntaDoItem.optString(JsonConstantes.JSON_VISIVEL_SE);
 
             int valorCondicional = Constantes.VALOR_CONDICIONAL_FALSE;
 
-                if (condicional.contains(JsonConstantes.JSON_PERGUNTA)) {
-                    valorCondicional = Constantes.VALOR_CONDICIONAL_TRUE;
-                    valorOpcional =Constantes.VALOR_OPCIONAL_TRUE; //toda condicional é opcional
-                }
+            if (condicional.contains(JsonConstantes.JSON_PERGUNTA)) {
+                valorCondicional = Constantes.VALOR_CONDICIONAL_TRUE;
+                valorOpcional = Constantes.VALOR_OPCIONAL_TRUE; //toda condicional é opcional
+            }
             idRespostaDoItem = banco.insereRespostaDoItemDaCategoria(idItemDaCategoria, tipo, idExternoResposta, valorOpcional, valorCondicional);
 
-            mapaIdExternoEIdInterno.put(idExternoResposta,idRespostaDoItem);
+            mapaIdExternoEIdInterno.put(idExternoResposta, idRespostaDoItem);
 
-                if (tipo.contains(JsonConstantes.JSON_ALTERNATIVAS)) {
+            if (tipo.contains(JsonConstantes.JSON_ALTERNATIVAS)) {
                 salvaAlternativas(idRespostaDoItem, objectPerguntaDoItem);
 
             }
 
-                if (valorCondicional == Constantes.VALOR_CONDICIONAL_TRUE) {
-                    salvaCondicionais(idRespostaDoItem, objectPerguntaDoItem, mapaIdExternoEIdInterno);
-                }
+            if (valorCondicional == Constantes.VALOR_CONDICIONAL_TRUE) {
+                salvaCondicionais(idRespostaDoItem, objectPerguntaDoItem, mapaIdExternoEIdInterno);
+            }
         }
     }
 
@@ -154,12 +157,12 @@ public class Controle {
         JSONArray jsonOpcoes = objectPerguntaDoItem.optJSONArray(JsonConstantes.JSON_OPCOES);
         int qtdOpcoes = jsonOpcoes.length();
 
-            for (int d = 0; d < qtdOpcoes; d++) {
-                JSONObject objectOpcao = jsonOpcoes.getJSONObject(d);
-                String valorTexto = objectOpcao.getString(JsonConstantes.JSON_TEXTO);
-                String valorResposta = objectOpcao.getString(JsonConstantes.JSON_RESPOSTA);
-               banco.insereOpcao(idPerguntaDoItem, valorTexto, valorResposta);
-            }
+        for (int d = 0; d < qtdOpcoes; d++) {
+            JSONObject objectOpcao = jsonOpcoes.getJSONObject(d);
+            String valorTexto = objectOpcao.getString(JsonConstantes.JSON_TEXTO);
+            String valorResposta = objectOpcao.getString(JsonConstantes.JSON_RESPOSTA);
+            banco.insereOpcao(idPerguntaDoItem, valorTexto, valorResposta);
+        }
     }
 
     private void salvaCondicionais(long idRespostaDoItem, JSONObject objectPerguntaDoItem, HashMap<Integer, Long> mapaIdExternoEIdInterno) throws JSONException {
@@ -182,8 +185,8 @@ public class Controle {
 
         //levar abaixo para splash screen ?
         LinearLayout linearLayoutPrincipal = new LinearLayout(this.context);
-        linearLayoutPrincipal.setPadding(15,15,15,15);
-        ListView listViewTitulos =  new ListView(this.context);
+        linearLayoutPrincipal.setPadding(15, 15, 15, 15);
+        ListView listViewTitulos = new ListView(this.context);
 
         listaIdExterno = banco.obterListaIdExterno();
         listaTituloItemChecagem = banco.obterListaTituloItemChecagem();
@@ -217,22 +220,22 @@ public class Controle {
 
         JSONObject jsonValoresItemChecagem = new JSONObject();
 
-            try {
-                jsonValoresItemChecagem.put(JsonConstantes.JSON_APP_ID,String.valueOf(idItemChecagem));
-                jsonValoresItemChecagem.put(JsonConstantes.JSON_APP_NOME,nomeApp);
+        try {
+            jsonValoresItemChecagem.put(JsonConstantes.JSON_APP_ID, String.valueOf(idItemChecagem));
+            jsonValoresItemChecagem.put(JsonConstantes.JSON_APP_NOME, nomeApp);
 
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
 
         arrayPrincipal.put(jsonValoresItemChecagem);
 
-        for(Categoria categoria:listaCategoria){
+        for (Categoria categoria : listaCategoria) {
             arrayItensDaCategoria = new JSONArray();
             jsonItensDaCategoria = new JSONObject();
             List<ItemChecagemDaCategoria> listaItensDaCategoria = banco.obterListaItemDaCategoria(categoria.getId());
 
-            for(ItemChecagemDaCategoria itemChecagemDaCategoria:listaItensDaCategoria){
+            for (ItemChecagemDaCategoria itemChecagemDaCategoria : listaItensDaCategoria) {
 
                 JSONObject jsonValoresItemChecagemDaCategoria = new JSONObject();
                 try {
@@ -242,40 +245,40 @@ public class Controle {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                        List<Resposta> listaPerguntasDoItem = banco.obterListaRespostasDoItem(itemChecagemDaCategoria.getId());
-                        arrayRespostas = new JSONArray();
+                List<Resposta> listaPerguntasDoItem = banco.obterListaRespostasDoItem(itemChecagemDaCategoria.getId());
+                arrayRespostas = new JSONArray();
 
-                                            for(Resposta resposta : listaPerguntasDoItem){
+                for (Resposta resposta : listaPerguntasDoItem) {
 
-                                                    if(resposta.getValorResposta()!=null) {
-                                                        jsonRespostas = new JSONObject();
-                                                        JSONObject jsonValoresRespostas = new JSONObject();
-                                                           try {
-                                                               jsonValoresRespostas.put(JsonConstantes.JSON_ID, String.valueOf(resposta.getIdExterno()));
-                                                               jsonValoresRespostas.put(JsonConstantes.JSON_RESPOSTA, resposta.getValorResposta());
-                                                               arrayRespostas.put(jsonValoresRespostas);
-                                                            } catch (JSONException e) {
-                                                                e.printStackTrace();
-                                                            }
-                                                    }
-                                            }
+                    if (resposta.getValorResposta() != null) {
+                        jsonRespostas = new JSONObject();
+                        JSONObject jsonValoresRespostas = new JSONObject();
+                        try {
+                            jsonValoresRespostas.put(JsonConstantes.JSON_ID, String.valueOf(resposta.getIdExterno()));
+                            jsonValoresRespostas.put(JsonConstantes.JSON_RESPOSTA, resposta.getValorResposta());
+                            arrayRespostas.put(jsonValoresRespostas);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
                 try {
 
                     jsonRespostas.put(JsonConstantes.JSON_VALORES, arrayRespostas);
                     arrayItensDaCategoria.put(jsonRespostas);
-                }catch (Exception e){
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
             try {
                 jsonItensDaCategoria.put(JsonConstantes.JSON_RESPOSTAS, arrayItensDaCategoria);
                 arrayPrincipal.put(jsonItensDaCategoria);
-            }catch (Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
         try {
-            jsonPrincipal.put(JsonConstantes.JSON_CHECKLISTS_RESPOSTAS,arrayPrincipal);
+            jsonPrincipal.put(JsonConstantes.JSON_CHECKLISTS_RESPOSTAS, arrayPrincipal);
         } catch (JSONException e) {
             e.printStackTrace();
         }
