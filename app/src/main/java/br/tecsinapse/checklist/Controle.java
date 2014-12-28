@@ -1,15 +1,6 @@
 package br.tecsinapse.checklist;
 
 import android.content.Context;
-import android.content.Intent;
-import android.view.View;
-import android.view.ViewGroup.LayoutParams;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
-import android.widget.ArrayAdapter;
-import android.widget.LinearLayout;
-import android.widget.ListView;
-import br.com.dealer.dealerships.R;
 import br.tecsinapse.checklist.entidades.Categoria;
 import br.tecsinapse.checklist.entidades.ItemChecagemDaCategoria;
 import br.tecsinapse.checklist.entidades.Resposta;
@@ -24,20 +15,22 @@ import org.json.JSONObject;
 
 public class Controle {
 
-    public Context context;
-    DataBaseHelper banco;
+
+    private Context context;
+    private DataBaseHelper banco;
     private boolean salvaItem = true;
-    JSONObject jsonCompleto = null;
-    List<Integer> listaIdExterno = new ArrayList<Integer>();
-    List<String> listaTituloItemChecagem = new ArrayList<String>();
+    private JSONObject jsonCompleto = null;
+    private List<Integer> listaIdExterno = new ArrayList<Integer>();
 
     public Controle(Context context) {
         this.context = context;
         this.banco = new DataBaseHelper(this.context);
+
     }
 
     public boolean insereJson(String json) {
         boolean retorno;
+
         listaIdExterno = banco.obterListaIdExterno(); //lista somente pra ver se tem o id dentro do banco
 
         try {
@@ -50,7 +43,7 @@ public class Controle {
     }
 
     private boolean verificaSeItemExisteESalva(String json) throws JSONException {
-        boolean retorno = false;
+        boolean salvouItem = false;
         jsonCompleto = new JSONObject(json);
         JSONArray jsonPrimeiroNo = jsonCompleto.optJSONArray(JsonConstantes.JSON_CHECKLISTS);//separa os itens de Checagem
         int tamanhoJsonArray = jsonPrimeiroNo.length();
@@ -66,91 +59,130 @@ public class Controle {
                 salvaItem = false;
             }
 
-            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+            SimpleDateFormat sdf = new SimpleDateFormat(Constantes.FORMATO_DATA);
             String data = sdf.format(new Date());
 
             if (salvaItem) {
-                SalvarItem(jsonObjetosUnicos, tituloChecagem, idExterno, nomeApp, data);
-                retorno = true;
+                try {
+                    salvouItem = SalvarItem(jsonObjetosUnicos, tituloChecagem, idExterno, nomeApp, data);
+                }
+                catch (Exception e){
+                    e.printStackTrace();
+                    salvouItem = false;
+                }
             }
         }
-        return retorno;
+        return salvouItem;
     }
 
-    private void SalvarItem(JSONObject jsonObjetosUnicos, String tituloChecagem, int idExterno, String nomeApp, String data) throws JSONException {
-
+    private boolean SalvarItem(JSONObject jsonObjetosUnicos, String tituloChecagem, int idExterno, String nomeApp, String data) throws JSONException {
+        boolean  salvouItem;
         long idItemChecagem;
         idItemChecagem = banco.insereItemChecagem(idExterno, tituloChecagem, nomeApp, data);//status 0 ja no metodo no banco
         JSONArray jsonCategorias = jsonObjetosUnicos.optJSONArray(JsonConstantes.JSON_CATEGORIAS);
         int qtdCategoriaNoObjeto = jsonCategorias.length();
-
-        salvaCategorias(idItemChecagem, jsonCategorias, qtdCategoriaNoObjeto);
+            try {
+                salvouItem = salvaCategorias(idItemChecagem, jsonCategorias, qtdCategoriaNoObjeto);
+                return salvouItem;
+            }
+            catch (Exception e){
+                e.printStackTrace();
+                salvouItem = false;
+            }
+        return salvouItem;
     }
 
-    private void salvaCategorias(long idItemChecagem, JSONArray jsonCategorias, int qtdCategoriaNoObjeto) throws JSONException {
+    private boolean salvaCategorias(long idItemChecagem, JSONArray jsonCategorias, int qtdCategoriaNoObjeto) throws JSONException {
         long idCategoria;
+        boolean salvouCategorias = false;
+        try {
+            for (int a = 0; a < qtdCategoriaNoObjeto; a++) {
+                JSONObject objetCategoria = jsonCategorias.getJSONObject(a);
+                String nomeCategoria = objetCategoria.getString(JsonConstantes.JSON_NOME);
+                JSONArray jsonItensChecagem = objetCategoria.optJSONArray(JsonConstantes.JSON_ITENS);
+                idCategoria = banco.insereCatetoria(nomeCategoria, idItemChecagem);
+                int qtdItensNaCategoria = jsonItensChecagem.length();
+                salvouCategorias = salvaItensDaCategoria(idCategoria, jsonItensChecagem, qtdItensNaCategoria);
+            }
 
-        for (int a = 0; a < qtdCategoriaNoObjeto; a++) {
-            JSONObject objetCategoria = jsonCategorias.getJSONObject(a);
-            String nomeCategoria = objetCategoria.getString(JsonConstantes.JSON_NOME);
-            JSONArray jsonItensChecagem = objetCategoria.optJSONArray(JsonConstantes.JSON_ITENS);
-            idCategoria = banco.insereCatetoria(nomeCategoria, idItemChecagem);
-            int qtdItensNaCategoria = jsonItensChecagem.length();
-            salvaItensDaCategoria(idCategoria, jsonItensChecagem, qtdItensNaCategoria);
+            return salvouCategorias;
         }
+        catch (Exception e){
+            e.printStackTrace();
+            salvouCategorias = false;
+        }
+        return salvouCategorias;
     }
 
-    private void salvaItensDaCategoria(long idCategoria, JSONArray jsonItensChecagem, int qtdItensNaCategoria) throws JSONException {
+    private boolean salvaItensDaCategoria(long idCategoria, JSONArray jsonItensChecagem, int qtdItensNaCategoria) throws JSONException {
         long idItemDaCategoria;
-        for (int b = 0; b < qtdItensNaCategoria; b++) {
-            JSONObject objectItemNaCategoria = jsonItensChecagem.getJSONObject(b);
-            int idExternoTituloItemDaCategoria = objectItemNaCategoria.getInt(JsonConstantes.JSON_ID);
-            String tituloItemDaCategoria = objectItemNaCategoria.getString(JsonConstantes.JSON_TEXTO);
-            idItemDaCategoria = banco.insereItemDaCategoria(tituloItemDaCategoria, idCategoria, idExternoTituloItemDaCategoria);
-            JSONArray jsonRespostasDoItemDaCategoria = objectItemNaCategoria.optJSONArray(JsonConstantes.JSON_RESPOSTAS);
-            int qtdRespostasNoItem = jsonRespostasDoItemDaCategoria.length();
-            salvaRespostasDoItem(idItemDaCategoria, jsonRespostasDoItemDaCategoria, qtdRespostasNoItem);
+        boolean salvouItensDaCategoria = false;
+        try {
+            for (int b = 0; b < qtdItensNaCategoria; b++) {
+                JSONObject objectItemNaCategoria = jsonItensChecagem.getJSONObject(b);
+                int idExternoTituloItemDaCategoria = objectItemNaCategoria.getInt(JsonConstantes.JSON_ID);
+                String tituloItemDaCategoria = objectItemNaCategoria.getString(JsonConstantes.JSON_TEXTO);
+                idItemDaCategoria = banco.insereItemDaCategoria(tituloItemDaCategoria, idCategoria, idExternoTituloItemDaCategoria);
+                JSONArray jsonRespostasDoItemDaCategoria = objectItemNaCategoria.optJSONArray(JsonConstantes.JSON_RESPOSTAS);
+                int qtdRespostasNoItem = jsonRespostasDoItemDaCategoria.length();
+                salvouItensDaCategoria =  salvaRespostasDoItem(idItemDaCategoria, jsonRespostasDoItemDaCategoria, qtdRespostasNoItem);
+            }
         }
+        catch (JSONException jE){
+            jE.printStackTrace();
+            salvouItensDaCategoria = false;
+        }
+        return  salvouItensDaCategoria;
     }
 
-    private void salvaRespostasDoItem(long idItemDaCategoria, JSONArray jsonPerguntasDoItemDaCategoria, int qtdPerguntasNoItem) throws JSONException {
+    private boolean salvaRespostasDoItem(long idItemDaCategoria, JSONArray jsonPerguntasDoItemDaCategoria, int qtdPerguntasNoItem) throws JSONException {
         long idRespostaDoItem;
+        boolean salvouRespostaDoItem;
+
         HashMap<Integer, Long> mapaIdExternoEIdInterno = new HashMap<Integer, Long>();
-        for (int c = 0; c < qtdPerguntasNoItem; c++) {
-            JSONObject objectPerguntaDoItem = jsonPerguntasDoItemDaCategoria.getJSONObject(c);
-            int idExternoResposta = objectPerguntaDoItem.getInt(JsonConstantes.JSON_ID);
-            String tipo = objectPerguntaDoItem.getString(JsonConstantes.JSON_TIPO);
-            String opcional;
-            opcional = objectPerguntaDoItem.optString(JsonConstantes.JSON_OPCIONAL);
+        try {
+            for (int c = 0; c < qtdPerguntasNoItem; c++) {
+                JSONObject objectPerguntaDoItem = jsonPerguntasDoItemDaCategoria.getJSONObject(c);
+                int idExternoResposta = objectPerguntaDoItem.getInt(JsonConstantes.JSON_ID);
+                String tipo = objectPerguntaDoItem.getString(JsonConstantes.JSON_TIPO);
+                String opcional;
+                opcional = objectPerguntaDoItem.optString(JsonConstantes.JSON_OPCIONAL);
 
-            int valorOpcional = Constantes.VALOR_OPCIONAL_FALSE;
+                int valorOpcional = Constantes.VALOR_OPCIONAL_FALSE;
 
-            if (opcional.equals("true")) {
-                valorOpcional = Constantes.VALOR_OPCIONAL_TRUE;
+                if (opcional.equals("true")) {
+                    valorOpcional = Constantes.VALOR_OPCIONAL_TRUE;
+                }
+
+                String condicional;
+                condicional = objectPerguntaDoItem.optString(JsonConstantes.JSON_VISIVEL_SE);
+
+                int valorCondicional = Constantes.VALOR_CONDICIONAL_FALSE;
+
+                if (condicional.contains(JsonConstantes.JSON_PERGUNTA)) {
+                    valorCondicional = Constantes.VALOR_CONDICIONAL_TRUE;
+                    valorOpcional = Constantes.VALOR_OPCIONAL_TRUE; //toda condicional é opcional
+                }
+                idRespostaDoItem = banco.insereRespostaDoItemDaCategoria(idItemDaCategoria, tipo, idExternoResposta, valorOpcional, valorCondicional);
+
+                mapaIdExternoEIdInterno.put(idExternoResposta, idRespostaDoItem);
+
+                if (tipo.contains(JsonConstantes.JSON_ALTERNATIVAS)) {
+                    salvaAlternativas(idRespostaDoItem, objectPerguntaDoItem);
+
+                }
+
+                if (valorCondicional == Constantes.VALOR_CONDICIONAL_TRUE) {
+                    salvaCondicionais(idRespostaDoItem, objectPerguntaDoItem, mapaIdExternoEIdInterno);
+                }
             }
-
-            String condicional;
-            condicional = objectPerguntaDoItem.optString(JsonConstantes.JSON_VISIVEL_SE);
-
-            int valorCondicional = Constantes.VALOR_CONDICIONAL_FALSE;
-
-            if (condicional.contains(JsonConstantes.JSON_PERGUNTA)) {
-                valorCondicional = Constantes.VALOR_CONDICIONAL_TRUE;
-                valorOpcional = Constantes.VALOR_OPCIONAL_TRUE; //toda condicional é opcional
-            }
-            idRespostaDoItem = banco.insereRespostaDoItemDaCategoria(idItemDaCategoria, tipo, idExternoResposta, valorOpcional, valorCondicional);
-
-            mapaIdExternoEIdInterno.put(idExternoResposta, idRespostaDoItem);
-
-            if (tipo.contains(JsonConstantes.JSON_ALTERNATIVAS)) {
-                salvaAlternativas(idRespostaDoItem, objectPerguntaDoItem);
-
-            }
-
-            if (valorCondicional == Constantes.VALOR_CONDICIONAL_TRUE) {
-                salvaCondicionais(idRespostaDoItem, objectPerguntaDoItem, mapaIdExternoEIdInterno);
-            }
+            salvouRespostaDoItem = true;
         }
+        catch (Exception e){
+            e.printStackTrace();
+            salvouRespostaDoItem = false;
+        }
+        return  salvouRespostaDoItem;
     }
 
     private void salvaAlternativas(long idPerguntaDoItem, JSONObject objectPerguntaDoItem) throws JSONException {
@@ -176,35 +208,6 @@ public class Controle {
         banco.insereCondicao(idRespostaDoItem, idRespostaQueDependo, valorResposta);
     }
 
-    public LinearLayout montaLayout() {
-
-
-        Intent apresentaSplash = new Intent(Controle.this.context.getApplicationContext(), SplashScreenActivity.class);
-        apresentaSplash.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        Controle.this.context.startActivity(apresentaSplash);
-
-        //levar abaixo para splash screen ?
-        LinearLayout linearLayoutPrincipal = new LinearLayout(this.context);
-        linearLayoutPrincipal.setPadding(15, 15, 15, 15);
-        ListView listViewTitulos = new ListView(this.context);
-
-        listaIdExterno = banco.obterListaIdExterno();
-        listaTituloItemChecagem = banco.obterListaTituloItemChecagem();
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this.context.getApplicationContext(), R.layout.simple_list_item_1, listaTituloItemChecagem);
-        listViewTitulos.setAdapter(adapter);
-        listViewTitulos.setOnItemClickListener(new OnItemClickListener() {
-            public void onItemClick(AdapterView<?> arg0, View arg1, int position,
-                                    long arg3) {
-
-                Intent irParaChecagem = new Intent(Controle.this.context.getApplicationContext(), Coletor.class);
-                irParaChecagem.putExtra(Constantes.ID_EXTERNO, listaIdExterno.get(position));
-                irParaChecagem.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                Controle.this.context.startActivity(irParaChecagem);
-            }
-        });
-        linearLayoutPrincipal.addView(listViewTitulos, LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT);
-        return linearLayoutPrincipal;
-    }
 
     public JSONObject obterJsonRespostas(String nomeApp) {
 

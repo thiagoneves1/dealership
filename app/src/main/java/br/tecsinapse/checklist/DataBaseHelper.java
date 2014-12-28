@@ -61,6 +61,10 @@ public class DataBaseHelper extends SQLiteOpenHelper {
                 "(id INTEGER PRIMARY KEY, idItemChecagem INTEGER," +
                 "caminhoArquivo TEXT, FOREIGN KEY(idItemChecagem) REFERENCES itemChecagem(id))";
 
+        String sqlIdEUsuario =  "CREATE TABLE IF NOT EXISTS identificacao " +
+                "(id INTEGER PRIMARY KEY, deviceId TEXT," +
+                "usuario TEXT)";
+
 
         db.execSQL(sqlItem);
         db.execSQL(sqlCategoria);
@@ -69,6 +73,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         db.execSQL(sqlOpcao);
         db.execSQL(sqlCondicao);
         db.execSQL(sqlFotos);
+        db.execSQL(sqlIdEUsuario);
 
         Log.i("BANCO", "BANCO CRIADO COM SUCESSO");
     }
@@ -103,6 +108,39 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 
     }
 
+    public String obterUsuario(){
+        SQLiteDatabase db = this.getWritableDatabase();
+        String query = "SELECT usuario FROM identificacao" ;
+        Cursor cursor = db.rawQuery(query, null);
+        Log.i("cursor",String.valueOf(cursor.getCount()));
+        if(cursor.getCount() > 0) {
+            cursor.moveToNext();
+            String usuario = cursor.getString(0);
+            return usuario;
+        }
+        return null;
+    }
+
+    public boolean existeUsuario(){
+        SQLiteDatabase db = this.getWritableDatabase();
+        String query = "SELECT usuario FROM identificacao" ;
+        Cursor cursor = db.rawQuery(query, null);
+        if(cursor.getCount() > 0) {
+            return true;
+        }
+        return false;
+    }
+
+    public void insereDeviceIdEUsuario(String deviceId, String usuario){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("deviceId",deviceId);
+        values.put("usuario", usuario);
+        db.insert("identificacao", null, values);
+        db.close();
+
+
+    }
     public void insereIdECaminhoFoto(int idRespostaParaFoto, String caminhoFoto) {
 
         SQLiteDatabase db = this.getWritableDatabase();
@@ -115,7 +153,6 @@ public class DataBaseHelper extends SQLiteOpenHelper {
     }
 
     public long insereItemChecagem(int idExterno, String tituloChecagem, String app, String data) {
-        Log.i("BANCO", String.valueOf(idExterno) + " - " + tituloChecagem);
         long retorno;
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -123,7 +160,6 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         values.put("tituloItem", tituloChecagem);
         values.put("app", app);
         values.put("status", Constantes.VALOR_INICIAL_STATUS);//sempre com status 0
-        Log.i("DataBaseHelper", data);
         values.put("data", data);
         values.put("progresso", Constantes.VALOR_INICIAL_PROGRESSO_ITEM);
         retorno = db.insert("itemChecagem", null, values);
@@ -420,6 +456,4 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         db.close();
         return null;
     }
-
-
 }

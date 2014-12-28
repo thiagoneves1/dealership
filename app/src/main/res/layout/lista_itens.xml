@@ -1,0 +1,25 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".ListaItens">
+    <TextView
+        android:background="@color/cinza_escuro"
+        android:textColor="@color/ghostwhite"
+        android:padding="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/title_activity_my"
+        android:gravity="center"
+        android:textSize="17dp"
+        android:id="@+id/text_view_quantidade_respondido"/>
+    <ListView
+        android:id="@+id/list_view_titulos"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+
+        >
+    </ListView>
+
+</LinearLayout>

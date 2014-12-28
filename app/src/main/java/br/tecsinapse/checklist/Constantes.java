@@ -5,8 +5,6 @@ import br.com.dealer.dealerships.R;
 
 public class Constantes {
 
-
-
     public static final String ALTERNATIVAS = "alternativas";
     public static final String ID_EXTERNO = "idExterno";
     public static final String RESPONDA_TODOS_ITENS = "Atenção, Itens obrigatórios não respondidos";
@@ -39,5 +37,11 @@ public class Constantes {
     public static final int VALOR_INICIAL_STATUS = 0;
     public static final String TITULO_LISTA_ITENS = "QUESTIONÁRIOS";
     public static final String ERRO_AO_SALVAR_ITENS = "Erro ao salvar Respostas";
+    public static final String NAO_CONECTADO = "Nao Conectado";
+    public static final String WIFI_CONECTADO = "Wi-fi Conectado";
+    public static final String MOBILE_CONECTADO = "Device Conectado";
+    public static final String USUÁRIO_SALVO_COM_SUCESSO = "Usuário Salvo Com Sucesso";
+    public static final String FORMATO_DATA = "dd/MM/yyyy";
+    public static final int DIFERENCA_ID_OPCOES_RADIO = 500; //precisa setar id das opções radio, para evitar conflito.
 
 }

@@ -36,6 +36,7 @@ public class ListaItensAdapter extends ArrayAdapter<ItemChecagem> {
         textViewData.setText(itemChecagem.getData());
 
         TextView textViewProgresso = (TextView) view.findViewById(R.id.text_view_progresso);
+
         if (itemChecagem.getProgresso() < 50) {
             textViewProgresso.setTextColor(context.getResources().getColor(Constantes.COR_VERMELHO));
         } else if (itemChecagem.getProgresso() > 49) {

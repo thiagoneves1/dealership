@@ -41,6 +41,7 @@ import java.util.Map;
 
 public class Coletor extends ActionBarActivity {
 
+    public static final String TAG = "Coletor";
     private DataBaseHelper banco;
     private Bundle extras;
     private ItemChecagem itemChecagem;
@@ -54,14 +55,16 @@ public class Coletor extends ActionBarActivity {
     private Uri fileUri;
     private int idRespostaParaFoto = 0;
     private String caminhoFoto = "";
-    private GerarLayoutDinamico geraLayoutDinamico;
+    private LayoutDinamico layoutDinamico;
     private int quantidadeDeRespostasRequeridas = 0;
     private int porcentagem = 0;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getSupportActionBar().setHomeButtonEnabled(true);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         banco = new DataBaseHelper(getApplicationContext());
         idExterno = 0;
 
@@ -81,36 +84,62 @@ public class Coletor extends ActionBarActivity {
             irParaResposta.putExtra(Constantes.ID_EXTERNO, idExterno);
             startActivity(irParaResposta);
             Coletor.this.finish();
+            
         } else {
 
             carregaListas();
             ScrollView sv = montaLayout();
-
-            this.setContentView(sv);
+            Coletor.this.setContentView(sv);
             verificaQuantidadeDeRespostasRequeridas();
-            verificaCondicionaisSalvas();
+            pergundasCondicionaisSalvas();
+        }
+    }
+
+    private void pergundasCondicionaisSalvas() {
+        
+        for (final Resposta resposta :  listaRespostasTotais) { 
+            if (resposta.getRespondida() == Constantes.VALOR_RESPONDIDA_TRUE) {
+                Log.i(String.valueOf(resposta.getId()), resposta.getValorResposta());
+                for (Opcao opcao : resposta.getListaOpcoes()) {
+
+                    if (opcao.getValorResposta().equals(resposta.getValorResposta())) {
+                        Log.i(String.valueOf(resposta.getId()), opcao.getValorTexto());
+                        verificaCondicionais(resposta.getId(), opcao.getValorTexto());
+                    }
+                }
+            }
         }
     }
 
     private ScrollView montaLayout() {
 
-        geraLayoutDinamico = new GerarLayoutDinamico(getApplicationContext());
+        layoutDinamico = new LayoutDinamico(getApplicationContext());
         ScrollView scrollView = new ScrollView(this);
         scrollView.setBackgroundColor(Color.WHITE);
 
-        LinearLayout linearLayoutBase = geraLayoutDinamico.gerarLayoutBase();
+        LinearLayout linearLayoutBase = layoutDinamico.gerarLayoutBase();
         scrollView.addView(linearLayoutBase);
 
-        LinearLayout linearLayoutBaseItem = geraLayoutDinamico.gerarLayoutBaseItem();
+        LinearLayout linearLayoutBaseItem = layoutDinamico.gerarLayoutBaseItem();
         linearLayoutBase.addView(linearLayoutBaseItem);
 
         montaLabelsCategorias(linearLayoutBase);
 
-        Button buttonOkPerguntasRespondidas = geraLayoutDinamico.gerarButton(); //new Button(this);
-        buttonOkPerguntasRespondidas.setText(Constantes.OK);
-        linearLayoutBase.addView(buttonOkPerguntasRespondidas);
+        LinearLayout linearLayoutBotoes = layoutDinamico.gerarLayoutBotoes();
 
-        buttonOkPerguntasRespondidas.setOnClickListener(new OnClickListener() {
+        linearLayoutBase.addView(linearLayoutBotoes);
+        criaBotoesOkFinaliza(linearLayoutBotoes);
+
+        return scrollView;
+    }
+
+    private void criaBotoesOkFinaliza(LinearLayout linearLayoutBotoes) {
+        
+        Button buttonOkQuestionario = layoutDinamico.gerarButton();
+        buttonOkQuestionario.setText(Constantes.OK);
+        linearLayoutBotoes.addView(buttonOkQuestionario);
+
+        buttonOkQuestionario.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
 
@@ -119,24 +148,18 @@ public class Coletor extends ActionBarActivity {
 
         });
 
-        Button buttonFinalizarQuestionario = geraLayoutDinamico.gerarButton();
+        Button buttonFinalizarQuestionario = layoutDinamico.gerarButton();
         buttonFinalizarQuestionario.setText(Constantes.FINALIZAR);
-        linearLayoutBase.addView(buttonFinalizarQuestionario);
+        linearLayoutBotoes.addView(buttonFinalizarQuestionario);
 
         buttonFinalizarQuestionario.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
                 atualizaProgresso();
-                Boolean perguntaSemResposta = false;
-                for (Resposta resposta : listaRespostasTotais) {
-                    if (resposta.getOpcional() == Constantes.VALOR_OPCIONAL_FALSE) {
-                        if (resposta.getRespondida() == Constantes.VALOR_RESPONDIDA_FALSE) {
-                            perguntaSemResposta = true;
-                        }
-                    }
-                }
+                Boolean perguntaNaoRespondida = false;
+                perguntaNaoRespondida = exitemPerguntasNaoRespondidas();
 
-                if (perguntaSemResposta) {
+                if (perguntaNaoRespondida) {
                     Toast.makeText(getApplicationContext(), Constantes.RESPONDA_TODOS_ITENS, Toast.LENGTH_SHORT).show();
                 } else {
                     try {
@@ -144,18 +167,27 @@ public class Coletor extends ActionBarActivity {
                         atualizaValorProgresso(idExterno);
                         atualizaStatuDoItem(idExterno);
                     } catch (Exception e) {
-                        Toast.makeText(getApplicationContext(), Constantes.ERRO_AO_SALVAR_ITENS, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), Constantes.ERRO_AO_SALVAR_ITENS, Toast.LENGTH_LONG).show();
                     }
-                    Toast.makeText(getApplicationContext(), Constantes.ITENS_RESPONDIDOS_SALVANDO, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), Constantes.ITENS_RESPONDIDOS_SALVANDO, Toast.LENGTH_LONG).show();
                     Intent irParaListaItens = new Intent(Coletor.this, ListaItens.class);
                     startActivity(irParaListaItens);
                 }
             }
         });
-
-        return scrollView;
     }
 
+    private Boolean exitemPerguntasNaoRespondidas() {
+
+        for (Resposta resposta : listaRespostasTotais) {
+            if (resposta.getOpcional() == Constantes.VALOR_OPCIONAL_FALSE) {
+                if (resposta.getRespondida() == Constantes.VALOR_RESPONDIDA_FALSE) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
     private void salvaPerguntas() {
 
@@ -164,14 +196,14 @@ public class Coletor extends ActionBarActivity {
         }
     }
 
-
     private void montaLabelsCategorias(LinearLayout linearLayout) {
+
         for (final Categoria categoria : itemChecagem.getListaCategorias()) {
 
-            LinearLayout linearLayoutBaseItem = geraLayoutDinamico.gerarLayoutBaseItem();
+            LinearLayout linearLayoutBaseItem = layoutDinamico.gerarLayoutBaseItem();
             linearLayout.addView(linearLayoutBaseItem);
 
-            TextView textViewCategorias = geraLayoutDinamico.gerarTextViewCategorias();// new LinearLayout(this);
+            TextView textViewCategorias = layoutDinamico.gerarTextViewCategorias();// new LinearLayout(this);
             textViewCategorias.setText(categoria.getNome().toUpperCase());
             linearLayoutBaseItem.addView(textViewCategorias);
 
@@ -180,44 +212,45 @@ public class Coletor extends ActionBarActivity {
     }
 
     private void montaItensDaCategoria(LinearLayout linearLayout, Categoria categoria) {
+
         int index = 0;
+
         for (final ItemChecagemDaCategoria itemChecagemDaCategoria : categoria.getListaItemChecagemDaCategoria()) {
             index++;
-            LinearLayout linearLayoutItensTextEFoto = geraLayoutDinamico.gerarLayoutItemChegagemDaCategoria();// new LinearLayout(this);
+            LinearLayout linearLayoutItensTextEFoto = layoutDinamico.gerarLayoutItemChegagemDaCategoria();// new LinearLayout(this);
 
-            TextView textViewNumeroDoItem = geraLayoutDinamico.gerarTextViewNumeroDoItem();
+            TextView textViewNumeroDoItem = layoutDinamico.gerarTextViewNumeroDoItem();
             textViewNumeroDoItem.setText(String.valueOf(index));
-            TextView textViewItemDaCategoria = geraLayoutDinamico.gerarTextViewItemDaCategoria(); //new TextView(this);
+            TextView textViewItemDaCategoria = layoutDinamico.gerarTextViewItemDaCategoria(); //new TextView(this);
             textViewItemDaCategoria.setText(itemChecagemDaCategoria.getTitulo());
 
             linearLayoutItensTextEFoto.addView(textViewNumeroDoItem);
             linearLayoutItensTextEFoto.addView(textViewItemDaCategoria);
             linearLayout.addView(linearLayoutItensTextEFoto);
 
-            LinearLayout linearLayoutRadioESpinner = geraLayoutDinamico.gerarLayoutRadioESpinner();
+            LinearLayout linearLayoutRadioESpinner = layoutDinamico.gerarLayoutRadioESpinner();
             linearLayout.addView(linearLayoutRadioESpinner);
             listaRespostasDoItem = banco.obterListaRespostasDoItem(itemChecagemDaCategoria.getId());
             montaViewsDasRespostas(itemChecagemDaCategoria, linearLayoutItensTextEFoto, linearLayoutRadioESpinner, linearLayout);
         }
     }
 
-    private void verificaCondicionaisSalvas() {
 
-        for (Resposta resposta : listaRespostasDoItem) {
-            if (resposta.getRespondida() == Constantes.VALOR_RESPONDIDA_TRUE) {
-                for (Opcao opcao : resposta.getListaOpcoes()) {
-                    if (opcao.getValorResposta().equals(resposta.getValorResposta())) {
-                        verificaCondicionais(resposta.getId(), opcao.getValorTexto());
-                    }
-                }
-            }
-        }
-    }
+
 
     private void montaViewsDasRespostas(final ItemChecagemDaCategoria itemChecagemDaCategoria, LinearLayout linearLayoutItensTextEFoto, LinearLayout linearLayoutRadioESpinner, LinearLayout linearLayout) {
 
-        List<Opcao> listaOpcoes = null;
-        for (final Resposta resposta : listaRespostasDoItem) {
+        for (final Resposta resposta :  listaRespostasDoItem) {
+                if (resposta.getRespondida() == Constantes.VALOR_RESPONDIDA_TRUE) {
+                    Log.i(String.valueOf(resposta.getId()),resposta.getValorResposta());
+                    for (Opcao opcao : resposta.getListaOpcoes()) {
+
+                        if (opcao.getValorResposta().equals(resposta.getValorResposta())) {
+                            Log.i(String.valueOf(resposta.getId()),opcao.getValorTexto());
+                            verificaCondicionais(resposta.getId(), opcao.getValorTexto());
+                        }
+                    }
+                }
 
             if (resposta.getCondicional() == Constantes.VALOR_CONDICIONAL_TRUE) {
                 resposta.setCondicao(banco.obterCondicao(resposta.getId()));
@@ -226,222 +259,243 @@ public class Coletor extends ActionBarActivity {
 
             listaRespostasTotais.add(resposta);
 
+            List<Opcao> listaOpcoes = null;
+
             if (resposta.getTipo().contains(Constantes.ALTERNATIVAS)) {
                 listaOpcoes = banco.obterListaOpcoesDaResposta(resposta.getId());
                 resposta.setListaOpcoes(listaOpcoes);
             }
 
+
+
         if (resposta.getTipo().equals(Constantes.RESPOSTA_TIPO_ALTERNATIVAS_RADIO)) {
 
-                final RadioGroup radioGroup = geraLayoutDinamico.gerarRadioGrupo();
-                radioGroup.setId(resposta.getId());
-
-                for (Opcao opcao : listaOpcoes) {
-                    RadioButton rb1 = new RadioButton(this);
-                    rb1.setText(opcao.getValorTexto());
-                    rb1.setTextSize(15);
-                    radioGroup.addView(rb1);
-                }
-
-                radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-                    public void onCheckedChanged(RadioGroup rg, int checkedId) {
-                        for (int i = 0; i < rg.getChildCount(); i++) {
-                            RadioButton btn = (RadioButton) rg.getChildAt(i);
-
-                            if (btn.getId() == checkedId) {
-                                String text = (String) btn.getText();//valor
-                                if (radioGroup.isShown()) {
-                                    marcaResposta(radioGroup.getId(), text);
-                                    verificaCondicionais(radioGroup.getId(), text);
-                                }
-                            }
-                        }
-                    }
-                });
-
-                if (resposta.getCondicional() == Constantes.VALOR_CONDICIONAL_TRUE) {
-                    radioGroup.setVisibility(View.INVISIBLE);
-                }
-                linearLayoutRadioESpinner.addView(radioGroup);
-                if (resposta.getRespondida() == Constantes.VALOR_RESPONDIDA_TRUE) {
-
-                    String valorTexto = "";
-                    for (Opcao opcao : resposta.getListaOpcoes()) {
-                        if (opcao.getValorResposta().equals(resposta.getValorResposta())) {
-                            valorTexto = opcao.getValorTexto();
-                        }
-                    }
-                    for (int i = 0; i < radioGroup.getChildCount(); i++) {
-                        RadioButton btn = (RadioButton) radioGroup.getChildAt(i);
-
-                        if (btn.getText().equals(valorTexto)) {
-
-                            btn.setChecked(true);
-                        }
-                    }
-                }
+            montaRadioBox(linearLayoutRadioESpinner, listaOpcoes, resposta);
             }
         else if (resposta.getTipo().equals(Constantes.RESPOSTA_TIPO_ALTERNATIVAS_LISTA)) {
-
-                final Spinner spinner = geraLayoutDinamico.gerarSpinner();
-                spinner.setId(resposta.getId());
-                List<String> listaParaAdapter = new ArrayList<String>();
-
-                for (Opcao opcao : listaOpcoes) {
-                    listaParaAdapter.add(opcao.getValorTexto());
-                }
-
-                ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
-                        R.layout.spinner_item, listaParaAdapter);
-                spinner.setAdapter(adapter);
-
-
-                spinner.setOnItemSelectedListener(new OnItemSelectedListener() {
-                    @Override
-                    public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                        String text = spinner.getSelectedItem().toString(); //valor
-                        if (spinner.isShown()) {
-                            marcaResposta(spinner.getId(), text);
-                            verificaCondicionais(spinner.getId(), text);
-                        } else {
-                            desmarcaResposta(spinner.getId());
-                        }
-                    }
-
-                    @Override
-                    public void onNothingSelected(AdapterView<?> adapterView) {
-                    }
-                });
-
-                String text = "";
-                if (resposta.getRespondida() == Constantes.VALOR_RESPONDIDA_TRUE) {
-                    for (Opcao opcao : resposta.getListaOpcoes()) {
-                        if (opcao.getValorResposta().equals(resposta.getValorResposta())) {
-                            text = opcao.getValorTexto();
-                            for (int i = 0; i < adapter.getCount(); i++) {
-                                if (text.trim().equals(adapter.getItem(i).toString())) {
-                                    spinner.setSelection(i);
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                if (resposta.getCondicional() == Constantes.VALOR_CONDICIONAL_TRUE) {
-                    spinner.setVisibility(View.INVISIBLE);
-                }
-                linearLayoutRadioESpinner.addView(spinner);
+Log.i(TAG, resposta.getTipo() + " - " + resposta.getId());
+            montaSpinner(linearLayoutRadioESpinner, listaOpcoes, resposta);
 
             }
         else if (resposta.getTipo().equals(Constantes.RESPOSTA_TIPO_TEXTO_LIVRE)) {
 
-                final ImageView imageViewText = geraLayoutDinamico.gerarImageView();
-
-                imageViewText.setId(resposta.getId());
-                if (resposta.getOpcional() == Constantes.VALOR_OPCIONAL_TRUE) {
-                    imageViewText.setBackgroundResource(R.drawable.ic_texto_opcional);
-                } else {
-                    imageViewText.setBackgroundResource(R.drawable.ic_texto_requerido);
-                }
-
-                imageViewText.setOnClickListener(new OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-
-                        String valorJaRespondido = verificaValorJaRespondido(imageViewText.getId());
-                        if (valorJaRespondido == null) {
-                            valorJaRespondido = "";
-                        }
-
-                        final Dialog dialogText = new Dialog(Coletor.this);
-                        dialogText.setContentView(R.layout.dialog_text);
-                        final TextView textViewTitulo = (TextView) dialogText.findViewById(R.id.text_view_titulo_dialog);
-                        textViewTitulo.setText(itemChecagemDaCategoria.getTitulo());
-                        final EditText input = (EditText) dialogText.findViewById(R.id.edit_text_dialog);
-                        input.setText(valorJaRespondido);
-                        final Button buttonOk = (Button) dialogText.findViewById(R.id.button_ok_dialog);
-                        buttonOk.setOnClickListener(new OnClickListener() {
-                            @Override
-                            public void onClick(View view) {
-                                String text = input.getEditableText().toString();
-                                Log.i("Button ok", text);
-                                if (text.length() > 1) {
-                                    marcaResposta(imageViewText.getId(), text);
-                                } else {
-                                    desmarcaResposta(imageViewText.getId());
-                                }
-                                dialogText.cancel();
-                            }
-                        });
-                        final Button buttonCancela = (Button) dialogText.findViewById(R.id.button_cancelar_dialog);
-                        buttonCancela.setOnClickListener(new OnClickListener() {
-                            @Override
-                            public void onClick(View view) {
-                                dialogText.cancel();
-                            }
-                        });
-                        dialogText.show();
-                    }
-                });
-                if (resposta.getCondicional() == Constantes.VALOR_CONDICIONAL_TRUE && resposta.getRespondida() == Constantes.VALOR_RESPONDIDA_FALSE) {
-                    imageViewText.setVisibility(View.INVISIBLE);
-                }
-                linearLayoutItensTextEFoto.addView(imageViewText);
-
-                if (resposta.getRespondida() == Constantes.VALOR_RESPONDIDA_TRUE) {
-                    imageViewText.setBackgroundResource(R.drawable.ic_texto_respondido);
-                }
+            montaEditText(itemChecagemDaCategoria, linearLayoutItensTextEFoto, resposta);
 
             }
         else if (resposta.getTipo().equals(Constantes.RESPOSTA_TIPO_FOTO)) {
 
-                final ImageView imageViewFoto = geraLayoutDinamico.gerarImageView();
-                imageViewFoto.setId(resposta.getId());
-                if (resposta.getOpcional() == Constantes.VALOR_OPCIONAL_TRUE) {
-                    imageViewFoto.setBackgroundResource(R.drawable.ic_camera_opcional);
-                } else {
-                    imageViewFoto.setBackgroundResource(R.drawable.ic_camera_requerido);
-                }
-
-                imageViewFoto.setOnClickListener(new OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-
-                        idRespostaParaFoto = imageViewFoto.getId();
-                        String valorJaRespondido = verificaValorJaRespondido(imageViewFoto.getId());
-
-                        if (valorJaRespondido != null) {
-                            mostraFoto(valorJaRespondido, imageViewFoto.getId(), itemChecagemDaCategoria.getTitulo());
-                        } else {
-                            caminhoFoto = null;
-                            String text = tirarFoto(idRespostaParaFoto);
-                            caminhoFoto = text;
-                            marcaResposta(idRespostaParaFoto, caminhoFoto);
-                        }
-                    }
-                });
-
-                if (resposta.getCondicional() == Constantes.VALOR_CONDICIONAL_TRUE) {
-                    imageViewFoto.setVisibility(View.INVISIBLE);
-                }
-                linearLayoutItensTextEFoto.addView(imageViewFoto);
-
-                if (resposta.getRespondida() == Constantes.VALOR_RESPONDIDA_TRUE) {
-                    imageViewFoto.setBackgroundResource(R.drawable.ic_camera_respondido);
-                }
+            montaViewFoto(itemChecagemDaCategoria, linearLayoutItensTextEFoto, resposta);
             }
         }
     }
 
+    private void montaViewFoto(final ItemChecagemDaCategoria itemChecagemDaCategoria, LinearLayout linearLayoutItensTextEFoto, Resposta resposta) {
+
+        final ImageView imageViewFoto = layoutDinamico.gerarImageView();
+
+        imageViewFoto.setId(resposta.getId());
+        if (resposta.getOpcional() == Constantes.VALOR_OPCIONAL_TRUE) {
+            imageViewFoto.setBackgroundResource(R.drawable.ic_camera_opcional);
+        } else {
+            imageViewFoto.setBackgroundResource(R.drawable.ic_camera_requerido);
+        }
+
+        imageViewFoto.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                idRespostaParaFoto = imageViewFoto.getId();
+                String valorJaRespondido = verificaValorJaRespondido(imageViewFoto.getId());
+
+                if (valorJaRespondido != null) {
+                    mostraFoto(valorJaRespondido, imageViewFoto.getId(), itemChecagemDaCategoria.getTitulo());
+                } else {
+                    caminhoFoto = null;
+                    String text = tirarFoto(idRespostaParaFoto);
+                    caminhoFoto = text;
+                    marcaResposta(idRespostaParaFoto, caminhoFoto);
+                }
+            }
+        });
+
+        if (resposta.getCondicional() == Constantes.VALOR_CONDICIONAL_TRUE) {
+            imageViewFoto.setVisibility(View.INVISIBLE);
+        }
+        linearLayoutItensTextEFoto.addView(imageViewFoto);
+
+        if (resposta.getRespondida() == Constantes.VALOR_RESPONDIDA_TRUE) {
+            imageViewFoto.setBackgroundResource(R.drawable.ic_camera_respondido);
+        }
+    }
+
+    private void montaEditText(final ItemChecagemDaCategoria itemChecagemDaCategoria, LinearLayout linearLayoutItensTextEFoto, Resposta resposta) {
+        final ImageView imageViewText = layoutDinamico.gerarImageView();
+
+        imageViewText.setId(resposta.getId());
+        if (resposta.getOpcional() == Constantes.VALOR_OPCIONAL_TRUE) {
+            imageViewText.setBackgroundResource(R.drawable.ic_texto_opcional);
+        } else {
+            imageViewText.setBackgroundResource(R.drawable.ic_texto_requerido);
+        }
+
+        imageViewText.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                String valorJaRespondido = verificaValorJaRespondido(imageViewText.getId());
+                if (valorJaRespondido == null) {
+                    valorJaRespondido = "";
+                }
+
+                final Dialog dialogText = new Dialog(Coletor.this);
+                dialogText.setContentView(R.layout.dialog_text);
+                final TextView textViewTitulo = (TextView) dialogText.findViewById(R.id.text_view_titulo_dialog);
+                textViewTitulo.setText(itemChecagemDaCategoria.getTitulo());
+                final EditText input = (EditText) dialogText.findViewById(R.id.edit_text_dialog);
+                input.setText(valorJaRespondido);
+                final Button buttonOk = (Button) dialogText.findViewById(R.id.button_ok_dialog);
+                buttonOk.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        String text = input.getEditableText().toString();
+                        if (text.length() > 1) {
+                            marcaResposta(imageViewText.getId(), text);
+                        } else {
+                            desmarcaResposta(imageViewText.getId());
+                        }
+                        dialogText.cancel();
+                    }
+                });
+                final Button buttonCancela = (Button) dialogText.findViewById(R.id.button_cancelar_dialog);
+                buttonCancela.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        dialogText.cancel();
+                    }
+                });
+                dialogText.show();
+            }
+        });
+        if (resposta.getCondicional() == Constantes.VALOR_CONDICIONAL_TRUE && resposta.getRespondida() == Constantes.VALOR_RESPONDIDA_FALSE) {
+            imageViewText.setVisibility(View.INVISIBLE);
+        }
+        linearLayoutItensTextEFoto.addView(imageViewText);
+
+        if (resposta.getRespondida() == Constantes.VALOR_RESPONDIDA_TRUE) {
+            imageViewText.setBackgroundResource(R.drawable.ic_texto_respondido);
+        }
+    }
+
+    private void montaSpinner(LinearLayout linearLayoutRadioESpinner, List<Opcao> listaOpcoes, Resposta resposta) {
+        final Spinner spinner = layoutDinamico.gerarSpinner();
+        spinner.setId(resposta.getId());
+        List<String> listaParaAdapter = new ArrayList<String>();
+
+
+            for (Opcao opcao : listaOpcoes) {
+                listaParaAdapter.add(opcao.getValorTexto());
+            }
+
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
+                R.layout.spinner_item, listaParaAdapter);
+        spinner.setAdapter(adapter);
+
+        spinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                String text = spinner.getSelectedItem().toString(); //valor
+                if (spinner.isShown()) {
+                    marcaResposta(spinner.getId(), text);
+                    verificaCondicionais(spinner.getId(), text);
+                } else {
+                    desmarcaResposta(spinner.getId());
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+            }
+        });
+
+        String text = "";
+        if (resposta.getRespondida() == Constantes.VALOR_RESPONDIDA_TRUE) {
+            for (Opcao opcao : resposta.getListaOpcoes()) {
+                if (opcao.getValorResposta().equals(resposta.getValorResposta())) {
+                    text = opcao.getValorTexto();
+                    for (int i = 0; i < adapter.getCount(); i++) {
+                        if (text.trim().equals(adapter.getItem(i).toString())) {
+                            spinner.setSelection(i);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (resposta.getCondicional() == Constantes.VALOR_CONDICIONAL_TRUE) {
+            spinner.setVisibility(View.INVISIBLE);
+        }
+        linearLayoutRadioESpinner.addView(spinner);
+    }
+
+    private void montaRadioBox(LinearLayout linearLayoutRadioESpinner, List<Opcao> listaOpcoes, Resposta resposta) {
+
+        final RadioGroup radioGroup = layoutDinamico.gerarRadioGrupo();
+        radioGroup.setId(resposta.getId());
+
+        if (resposta.getRespondida() == Constantes.VALOR_RESPONDIDA_TRUE) {
+
+        }
+        for (Opcao opcao : listaOpcoes) {
+
+          final  RadioButton rb1 = new RadioButton(this);
+            rb1.setText(opcao.getValorTexto());
+            rb1.setTextSize(19);
+            rb1.setId(Integer.parseInt(Integer.toString(resposta.getId()) + Constantes.DIFERENCA_ID_OPCOES_RADIO + Integer.toString(opcao.getId())));
+            if (resposta.getRespondida() == Constantes.VALOR_RESPONDIDA_TRUE) {
+                if (opcao.getValorResposta().equals(resposta.getValorResposta())) {
+                    rb1.setChecked(true);
+                }
+            }
+            radioGroup.addView(rb1);
+        }
+
+        radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            public void onCheckedChanged(RadioGroup rg, int checkedId) {
+
+                for (int i = 0; i < rg.getChildCount(); i++) {
+                   RadioButton rbn = (RadioButton) rg.getChildAt(i);
+                     Log.i(TAG, String.valueOf(checkedId) );
+                    if (rbn.getId() == checkedId) {
+                        String text = (String) rbn.getText();//valor
+                            marcaResposta(radioGroup.getId(), text);
+                      //  Log.i(TAG, String.valueOf(radioGroup.getId()) + " "+text );
+                            verificaCondicionais(radioGroup.getId(), text);
+                    }
+                }
+            }
+        });
+
+        if (resposta.getCondicional() == Constantes.VALOR_CONDICIONAL_TRUE) {
+            radioGroup.setVisibility(View.INVISIBLE);
+        }
+
+        linearLayoutRadioESpinner.addView(radioGroup);
+    }
+
+
     private void verificaCondicionais(int id, String text) {
+
+
         if (mapaPerguntasCondicionais.containsKey(id)) {
+
             int idDependente = mapaPerguntasCondicionais.get(id);
             percorrePerguntas:
             for (Resposta resposta : listaRespostasTotais) {
                 if (idDependente == resposta.getId()) {
                     if (resposta.getCondicao().getValorResposta().equals(text)) {
-
+                       // Log.i(TAG, String.valueOf(id) + " " + text );
                         View view = findViewById(idDependente);
                         view.setVisibility(View.VISIBLE);
                         break percorrePerguntas;
@@ -480,6 +534,7 @@ public class Coletor extends ActionBarActivity {
     }
 
     private String tirarFoto(int id) {
+
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         fileUri = Uri.fromFile(caminhoArquivoDaFoto(id));
         intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
@@ -488,6 +543,7 @@ public class Coletor extends ActionBarActivity {
     }
 
     private void mostraFoto(final String caminhoFoto, int id, String titulo) {
+
         final int idInterno = id;
         ImageView imageViewFoto;
         Button buttonManterFoto, buttonTrocarFoto;
@@ -522,6 +578,7 @@ public class Coletor extends ActionBarActivity {
     }
 
     private String verificaValorJaRespondido(int id) {
+
         String retorno = null;
         for (Resposta resposta : listaRespostasTotais) {
             if (resposta.getId() == id) {
@@ -586,6 +643,7 @@ public class Coletor extends ActionBarActivity {
     }
 
     private File caminhoArquivoDaFoto(int id) {
+
         File diretorio = Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_PICTURES);
         if (!diretorio.exists()) {
@@ -600,21 +658,22 @@ public class Coletor extends ActionBarActivity {
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
         if (requestCode == Constantes.CODIGO_IMAGEM_CAPTURA_FOTO) {
             if (resultCode == RESULT_OK) {
                 if (data == null) {
-                    Toast.makeText(this, Constantes.IMAGEM_SALVA_COM_SUCESSO,
+                    Toast.makeText(getApplicationContext(), Constantes.IMAGEM_SALVA_COM_SUCESSO,
                             Toast.LENGTH_LONG).show();
                 } else {
 
-                    Toast.makeText(this, Constantes.IMAGEM_SALVA_COM_SUCESSO_EM + data.getData(),
+                    Toast.makeText(getApplicationContext(), Constantes.IMAGEM_SALVA_COM_SUCESSO_EM + data.getData(),
                             Toast.LENGTH_LONG).show();
                 }
             } else if (resultCode == RESULT_CANCELED) {
-                Toast.makeText(this, Constantes.CANCELADO, Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), Constantes.CANCELADO, Toast.LENGTH_SHORT).show();
                 desmarcaResposta(idRespostaParaFoto);
             } else {
-                Toast.makeText(this, Constantes.ERRO_AO_SALVAR_IMAGEM,
+                Toast.makeText(getApplicationContext(), Constantes.ERRO_AO_SALVAR_IMAGEM,
                         Toast.LENGTH_LONG).show();
                 desmarcaResposta(idRespostaParaFoto);
             }
@@ -622,6 +681,7 @@ public class Coletor extends ActionBarActivity {
     }
 
     private void carregaListas() {
+
         itemChecagem = banco.obterItemChecagem(idExterno);
         idItemChecagem = itemChecagem.getId();
         android.support.v7.app.ActionBar ab = getSupportActionBar();
@@ -635,6 +695,7 @@ public class Coletor extends ActionBarActivity {
     }
 
     private void verificaQuantidadeDeRespostasRequeridas() {
+
         for (Resposta resposta : listaRespostasTotais) {
             if (resposta.getOpcional() == Constantes.VALOR_OPCIONAL_FALSE) {
                 quantidadeDeRespostasRequeridas++;
@@ -643,6 +704,7 @@ public class Coletor extends ActionBarActivity {
     }
 
     private void atualizaProgresso() {
+
         int quantidadeResposdida = 0;
         for (Resposta resposta : listaRespostasTotais) {
             if (resposta.getRespondida() == Constantes.VALOR_RESPONDIDA_TRUE && resposta.getOpcional() == Constantes.VALOR_OPCIONAL_FALSE) {
@@ -659,6 +721,7 @@ public class Coletor extends ActionBarActivity {
     }
 
     private void salvaESaiDaActivity() {
+
         atualizaProgresso();
         try {
             salvaPerguntas();
@@ -673,7 +736,7 @@ public class Coletor extends ActionBarActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.my, menu);
+        getMenuInflater().inflate(R.menu.coletor, menu);
         return true;
     }
 
@@ -681,18 +744,21 @@ public class Coletor extends ActionBarActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
 
         switch (item.getItemId()) {
-            case R.id.action_settings:
 
+            case R.id.action_settings:
+                Intent irParaConfiguracao = new Intent(Coletor.this, Configuracao.class);
+                startActivity(irParaConfiguracao);
                 return true;
+
             case R.id.action_refresh:
                 Intent irParaSincronia = new Intent(Coletor.this, Sincronizar.class);
                 startActivity(irParaSincronia);
-
                 return true;
+
             case android.R.id.home:
                 salvaESaiDaActivity();
-
                 return true;
+
             default:
                 return super.onOptionsItemSelected(item);
         }

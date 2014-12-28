@@ -1,15 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="br.com.dealer.dealerships" >
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name"
         android:theme="@style/AppTheme" >
+>
         <activity
-            android:name="br.tecsinapse.checklist.SplashScreenActivity"
 
-            >
+            android:name="br.tecsinapse.dealer.dealerships.MyActivity"
+            android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -17,23 +22,32 @@
             </intent-filter>
         </activity>
         <activity
+
+            android:name="br.tecsinapse.checklist.Start"
+            android:configChanges="orientation|keyboardHidden|screenSize" >
+        </activity>
+        <activity
             android:name="br.tecsinapse.checklist.Coletor"
-            android:configChanges="orientation|keyboardHidden|screenSize"
-            >
+            android:configChanges="orientation|keyboardHidden|screenSize" >
         </activity>
         <activity
             android:name="br.tecsinapse.dealer.dealerships.JsonResposta"
+            android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_activity_resposta" >
         </activity>
         <activity
             android:name="br.tecsinapse.checklist.Sincronizar"
+            android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_sincronizar" >
         </activity>
         <activity
             android:name="br.tecsinapse.checklist.ListaItens"
-            >
+            android:configChanges="orientation|keyboardHidden|screenSize" >
+        </activity>
+        <activity
+            android:name="br.tecsinapse.checklist.Configuracao"
+            android:label="@string/title_activity_configuracao" >
         </activity>
     </application>
-
 
 </manifest>

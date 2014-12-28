@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
+import android.widget.TextView;
 import br.com.dealer.dealerships.R;
 import br.tecsinapse.checklist.entidades.ItemChecagem;
 import java.util.ArrayList;
@@ -18,32 +19,31 @@ import java.util.List;
 
 public class ListaItens extends ActionBarActivity {
 
-    List<ItemChecagem> listaItemChecagem = new ArrayList<ItemChecagem>();
-
-    DataBaseHelper banco;
-
-    ListView listViewTitulos;
-
-    List<Integer> listaIdExterno = new ArrayList<Integer>();
+    private List<ItemChecagem> listaItemChecagem = new ArrayList<ItemChecagem>();
+    private DataBaseHelper banco;
+    private ListView listViewTitulos;
+    private List<Integer> listaIdExterno = new ArrayList<Integer>();
     private Bundle extras;
     private int dadosOk = 0;
-
+    private TextView textViewItensRespondidos;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         android.support.v7.app.ActionBar ab = getSupportActionBar();
         ab.setTitle(Constantes.TITULO_LISTA_ITENS);
-        setContentView(R.layout.activity_my);
+        setContentView(R.layout.lista_itens);
 
         listViewTitulos = (ListView) findViewById(R.id.list_view_titulos);
+        textViewItensRespondidos = (TextView) findViewById(R.id.text_view_quantidade_respondido);
+
 
         if (savedInstanceState == null) {
             extras = getIntent().getExtras();
             if (extras == null) {
                 dadosOk = 0;
             } else {
-                dadosOk = extras.getInt("ok");
+                dadosOk = extras.getInt(Constantes.OK);
             }
         }
 
@@ -52,8 +52,7 @@ public class ListaItens extends ActionBarActivity {
             carregaDados();
 
         } else {
-            Log.i("dados NAO inseridos", "ERRO");//mas existem outros dados ?
-            carregaDados();
+            carregaDados(); //dados ja gravados
         }
     }
 
@@ -63,6 +62,16 @@ public class ListaItens extends ActionBarActivity {
         listaItemChecagem = banco.obterListaItemChecagem();
 
         final ListaItensAdapter adapter = new ListaItensAdapter(ListaItens.this, listaItemChecagem);
+
+        int totalItens = listaItemChecagem.size();
+        int totalRespondido =0;
+        for (ItemChecagem ic : listaItemChecagem){
+            if(ic.getStatus()==Constantes.VALOR_ITEM_JA_VERIFICADO_TRUE){
+                totalRespondido++;
+            }
+        }
+
+        textViewItensRespondidos.append(" " + String.valueOf(totalRespondido) + "/" + String.valueOf(totalItens));
 
         listViewTitulos.setAdapter(adapter);
         listViewTitulos.setOnItemClickListener(new OnItemClickListener() {
@@ -80,7 +89,7 @@ public class ListaItens extends ActionBarActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.my, menu);
+        getMenuInflater().inflate(R.menu.coletor, menu);
         return true;
     }
 
@@ -89,12 +98,14 @@ public class ListaItens extends ActionBarActivity {
 
         switch (item.getItemId()) {
             case R.id.action_settings:
-
+                Intent irParaConfiguracao = new Intent(ListaItens.this, Configuracao.class);
+                startActivity(irParaConfiguracao);
                 return true;
             case R.id.action_refresh:
                 Intent irParaSincronia = new Intent(ListaItens.this, Sincronizar.class);
                 startActivity(irParaSincronia);
                 return true;
+
             default:
                 return super.onOptionsItemSelected(item);
         }
