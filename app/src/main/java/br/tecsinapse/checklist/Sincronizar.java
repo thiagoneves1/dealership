@@ -47,7 +47,7 @@ public class Sincronizar extends ActionBarActivity {
         buttonSincronizar.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                verificarConexao();
+                verificarConexaoESincronizar();
                 editResult.getText().clear();
             }
         });
@@ -57,7 +57,7 @@ public class Sincronizar extends ActionBarActivity {
     }
 
 
-   private void verificarConexao() {
+   private void verificarConexaoESincronizar() {
 
         ConnectivityManager connMgr =
                 (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -130,24 +130,23 @@ public class Sincronizar extends ActionBarActivity {
     }
 
     private String GET(String url) {
-        InputStream inputStream = null;
+        InputStream inputStream;
         String result = "";
         try {
 
-
             HttpClient httpclient = new DefaultHttpClient();
 
-
             HttpResponse httpResponse = httpclient.execute(new HttpGet(url));
-
 
             inputStream = httpResponse.getEntity().getContent();
 
 
-            if(inputStream != null)
-                result = convertInputStreamToString(inputStream);
-            else
-                result = "erro ao receber dados";
+            if(inputStream != null) {
+                result = converterInputStreamParaString(inputStream);
+            }
+            else {
+                result = "Erro ao receber dados";
+            }
 
         } catch (Exception e) {
             Log.d(TAG, e.getLocalizedMessage());
@@ -156,16 +155,18 @@ public class Sincronizar extends ActionBarActivity {
         return result;
     }
 
-    private static String convertInputStreamToString(InputStream inputStream) throws IOException {
+    private static String converterInputStreamParaString(InputStream inputStream) throws IOException {
         BufferedReader bufferedReader = new BufferedReader( new InputStreamReader(inputStream));
-        String line = "";
-        String result = "";
+        String linha = "";
+        StringBuffer concatena = new StringBuffer();
+        String resultado = "";
 
-        while((line = bufferedReader.readLine()) != null) {
-            result += line;
+        while((linha = bufferedReader.readLine()) != null) {
+            concatena.append(linha + "\n");
         }
         inputStream.close();
-        return result;
+        resultado = concatena.toString();
+        return  resultado;
 
     }
 }
