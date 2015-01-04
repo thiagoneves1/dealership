@@ -2,6 +2,7 @@ package br.tecsinapse.checklist;
 
 import android.app.Dialog;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
@@ -13,6 +14,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
@@ -20,6 +22,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.LinearLayout.LayoutParams;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.ScrollView;
@@ -42,6 +45,7 @@ import java.util.Map;
 public class Coletor extends ActionBarActivity {
 
     public static final String TAG = "Coletor";
+    private static final int ACTIVITY_SELECT_IMAGE = 1;
     private DataBaseHelper banco;
     private Bundle extras;
     private ItemChecagem itemChecagem;
@@ -58,7 +62,9 @@ public class Coletor extends ActionBarActivity {
     private LayoutDinamico layoutDinamico;
     private int quantidadeDeRespostasRequeridas = 0;
     private int porcentagem = 0;
-
+    private int quantidadeLayoutParaMontarNoSpinner =0;
+    private List<LinearLayout> listaLinearLayoutParaInserirSpinner = new ArrayList<LinearLayout>();
+    private Map<Integer,List> mapaIdPerguntaEIdViewParaSetarSpinner =  new HashMap<Integer, List>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -136,7 +142,7 @@ public class Coletor extends ActionBarActivity {
     private void criaBotoesOkFinaliza(LinearLayout linearLayoutBotoes) {
         
         Button buttonOkQuestionario = layoutDinamico.gerarButton();
-        buttonOkQuestionario.setText(Constantes.OK);
+        buttonOkQuestionario.setText(Constantes.SALVAR);
         linearLayoutBotoes.addView(buttonOkQuestionario);
 
         buttonOkQuestionario.setOnClickListener(new OnClickListener() {
@@ -229,16 +235,22 @@ public class Coletor extends ActionBarActivity {
             linearLayout.addView(linearLayoutItensTextEFoto);
 
             LinearLayout linearLayoutRadioESpinner = layoutDinamico.gerarLayoutRadioESpinner();
+            LinearLayout linearLayoutRadio = layoutDinamico.gerarLayoutRadio();
+
+            linearLayoutRadioESpinner.addView(linearLayoutRadio);
+            LinearLayout linearLayoutSpinner = layoutDinamico.gerarLayoutSpinner();
+
+            linearLayoutRadioESpinner.addView(linearLayoutSpinner);
             linearLayout.addView(linearLayoutRadioESpinner);
             listaRespostasDoItem = banco.obterListaRespostasDoItem(itemChecagemDaCategoria.getId());
-            montaViewsDasRespostas(itemChecagemDaCategoria, linearLayoutItensTextEFoto, linearLayoutRadioESpinner, linearLayout);
+            montaViewsDasRespostas(itemChecagemDaCategoria, linearLayoutItensTextEFoto, linearLayoutRadio, linearLayoutSpinner, linearLayout);
         }
     }
 
 
 
 
-    private void montaViewsDasRespostas(final ItemChecagemDaCategoria itemChecagemDaCategoria, LinearLayout linearLayoutItensTextEFoto, LinearLayout linearLayoutRadioESpinner, LinearLayout linearLayout) {
+    private void montaViewsDasRespostas(final ItemChecagemDaCategoria itemChecagemDaCategoria, LinearLayout linearLayoutItensTextEFoto, LinearLayout linearLayoutRadio,LinearLayout linearLayoutSpinner, LinearLayout linearLayout) {
 
         for (final Resposta resposta :  listaRespostasDoItem) {
                 if (resposta.getRespondida() == Constantes.VALOR_RESPONDIDA_TRUE) {
@@ -267,14 +279,16 @@ public class Coletor extends ActionBarActivity {
             }
 
 
-
         if (resposta.getTipo().equals(Constantes.RESPOSTA_TIPO_ALTERNATIVAS_RADIO)) {
 
-            montaRadioBox(linearLayoutRadioESpinner, listaOpcoes, resposta);
-            }
+            montaRadioBox(linearLayoutRadio, listaOpcoes, resposta);
+
+            montaLayoutParaSpinner(linearLayoutSpinner, quantidadeLayoutParaMontarNoSpinner, resposta.getId());
+
+        }
         else if (resposta.getTipo().equals(Constantes.RESPOSTA_TIPO_ALTERNATIVAS_LISTA)) {
-Log.i(TAG, resposta.getTipo() + " - " + resposta.getId());
-            montaSpinner(linearLayoutRadioESpinner, listaOpcoes, resposta);
+
+            montaSpinner(linearLayoutSpinner, linearLayoutRadio, listaOpcoes, resposta);
 
             }
         else if (resposta.getTipo().equals(Constantes.RESPOSTA_TIPO_TEXTO_LIVRE)) {
@@ -287,6 +301,24 @@ Log.i(TAG, resposta.getTipo() + " - " + resposta.getId());
             montaViewFoto(itemChecagemDaCategoria, linearLayoutItensTextEFoto, resposta);
             }
         }
+    }
+
+    private void montaLayoutParaSpinner(LinearLayout linearLayoutSpinner, int quantidadeLayoutParaMontarNoSpinner, int idResposta) {
+        mapaIdPerguntaEIdViewParaSetarSpinner.clear();
+        listaLinearLayoutParaInserirSpinner.clear();
+
+        for(int i=0; i < quantidadeLayoutParaMontarNoSpinner; i++){
+          final  LinearLayout layoutSpinnerIndiviual = layoutDinamico.gerarLayoutSpinnerIndividual();
+
+            int idViewIndividualParaSpinner = Integer.valueOf(String.valueOf(idResposta) + String.valueOf(Constantes.DIFERENCA_ID_LAYOUT_SPINNER) + String.valueOf(i));
+                layoutSpinnerIndiviual.setId(idViewIndividualParaSpinner);
+
+            listaLinearLayoutParaInserirSpinner.add(layoutSpinnerIndiviual);
+            linearLayoutSpinner.addView(layoutSpinnerIndiviual);
+
+        }
+        mapaIdPerguntaEIdViewParaSetarSpinner.put(idResposta, listaLinearLayoutParaInserirSpinner);
+
     }
 
     private void montaViewFoto(final ItemChecagemDaCategoria itemChecagemDaCategoria, LinearLayout linearLayoutItensTextEFoto, Resposta resposta) {
@@ -310,10 +342,7 @@ Log.i(TAG, resposta.getTipo() + " - " + resposta.getId());
                 if (valorJaRespondido != null) {
                     mostraFoto(valorJaRespondido, imageViewFoto.getId(), itemChecagemDaCategoria.getTitulo());
                 } else {
-                    caminhoFoto = null;
-                    String text = tirarFoto(idRespostaParaFoto);
-                    caminhoFoto = text;
-                    marcaResposta(idRespostaParaFoto, caminhoFoto);
+                    dialogEhParaFotograr(itemChecagemDaCategoria.getTitulo());
                 }
             }
         });
@@ -348,6 +377,7 @@ Log.i(TAG, resposta.getTipo() + " - " + resposta.getId());
                 }
 
                 final Dialog dialogText = new Dialog(Coletor.this);
+                dialogText.requestWindowFeature(Window.FEATURE_NO_TITLE);
                 dialogText.setContentView(R.layout.dialog_text);
                 final TextView textViewTitulo = (TextView) dialogText.findViewById(R.id.text_view_titulo_dialog);
                 textViewTitulo.setText(itemChecagemDaCategoria.getTitulo());
@@ -386,16 +416,14 @@ Log.i(TAG, resposta.getTipo() + " - " + resposta.getId());
         }
     }
 
-    private void montaSpinner(LinearLayout linearLayoutRadioESpinner, List<Opcao> listaOpcoes, Resposta resposta) {
+    private void montaSpinner(LinearLayout linearLayoutSpinner, LinearLayout linearLayoutRadio, List<Opcao> listaOpcoes, Resposta resposta) {
         final Spinner spinner = layoutDinamico.gerarSpinner();
         spinner.setId(resposta.getId());
         List<String> listaParaAdapter = new ArrayList<String>();
 
-
             for (Opcao opcao : listaOpcoes) {
                 listaParaAdapter.add(opcao.getValorTexto());
             }
-
 
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
                 R.layout.spinner_item, listaParaAdapter);
@@ -434,31 +462,60 @@ Log.i(TAG, resposta.getTipo() + " - " + resposta.getId());
         }
 
         if (resposta.getCondicional() == Constantes.VALOR_CONDICIONAL_TRUE) {
+
+            if(listaLinearLayoutParaInserirSpinner.size()>0) {//existe um RadioGroup Criado
+                int idRespostaQueEstaCondicionada = resposta.getCondicao().getIdRespostaEmCondicional();
+                List<LinearLayout> listaLinearLayouts = mapaIdPerguntaEIdViewParaSetarSpinner.get(idRespostaQueEstaCondicionada);
+                int indiceDaRespostaCondicionada = verificaIndiceCondicionais(resposta.getCondicao().getValorResposta(), idRespostaQueEstaCondicionada);
+                listaLinearLayouts.get(indiceDaRespostaCondicionada).addView(spinner);//preciso ver o indice que esta condicionado
+            }
             spinner.setVisibility(View.INVISIBLE);
+            listaLinearLayoutParaInserirSpinner.clear();
         }
-        linearLayoutRadioESpinner.addView(spinner);
+        else{ //preciso ver se nao tem layout montado ?
+            if(listaLinearLayoutParaInserirSpinner.size()>0) {
+                listaLinearLayoutParaInserirSpinner.get(0).addView(spinner);//no comeco (se for 3) da ultima lista montada
+                listaLinearLayoutParaInserirSpinner.clear();
+            }
+            else{
+                LinearLayout layoutSpinnerIndiviualEsquerda = layoutDinamico.gerarLayoutSpinnerIndividualEsquerda();
+                linearLayoutRadio.addView(layoutSpinnerIndiviualEsquerda);
+
+                LinearLayout layoutSpinnerIndiviualDireita = layoutDinamico.gerarLayoutSpinnerIndividual();
+                layoutSpinnerIndiviualDireita.addView(spinner);
+                linearLayoutSpinner.addView(layoutSpinnerIndiviualDireita);
+            }
+        }
     }
 
-    private void montaRadioBox(LinearLayout linearLayoutRadioESpinner, List<Opcao> listaOpcoes, Resposta resposta) {
+    private void montaRadioBox(LinearLayout linearLayoutRadio, List<Opcao> listaOpcoes, Resposta resposta) {
 
         final RadioGroup radioGroup = layoutDinamico.gerarRadioGrupo();
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+        radioGroup.setLayoutParams(lp);
         radioGroup.setId(resposta.getId());
 
         if (resposta.getRespondida() == Constantes.VALOR_RESPONDIDA_TRUE) {
 
         }
-        for (Opcao opcao : listaOpcoes) {
+        quantidadeLayoutParaMontarNoSpinner = 0;
 
+        for (Opcao opcao : listaOpcoes) {
+            quantidadeLayoutParaMontarNoSpinner++;
           final  RadioButton rb1 = new RadioButton(this);
+
+            RadioGroup.LayoutParams params_rb = layoutDinamico.gerarParametroParaRadio();
+
             rb1.setText(opcao.getValorTexto());
             rb1.setTextSize(19);
+            rb1.setBackgroundColor(getResources().getColor(R.color.ghostwhite));
             rb1.setId(Integer.parseInt(Integer.toString(resposta.getId()) + Constantes.DIFERENCA_ID_OPCOES_RADIO + Integer.toString(opcao.getId())));
             if (resposta.getRespondida() == Constantes.VALOR_RESPONDIDA_TRUE) {
                 if (opcao.getValorResposta().equals(resposta.getValorResposta())) {
                     rb1.setChecked(true);
                 }
             }
-            radioGroup.addView(rb1);
+            radioGroup.addView(rb1, params_rb);
         }
 
         radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
@@ -470,7 +527,6 @@ Log.i(TAG, resposta.getTipo() + " - " + resposta.getId());
                     if (rbn.getId() == checkedId) {
                         String text = (String) rbn.getText();//valor
                             marcaResposta(radioGroup.getId(), text);
-                      //  Log.i(TAG, String.valueOf(radioGroup.getId()) + " "+text );
                             verificaCondicionais(radioGroup.getId(), text);
                     }
                 }
@@ -480,22 +536,35 @@ Log.i(TAG, resposta.getTipo() + " - " + resposta.getId());
         if (resposta.getCondicional() == Constantes.VALOR_CONDICIONAL_TRUE) {
             radioGroup.setVisibility(View.INVISIBLE);
         }
-
-        linearLayoutRadioESpinner.addView(radioGroup);
+        linearLayoutRadio.addView(radioGroup);
     }
 
+private  int verificaIndiceCondicionais( String text, int idRespostaQueEstaCondicionada) {
+        int indice =0;
 
+            percorrePerguntas:
+            for (Resposta resposta : listaRespostasTotais) {
+                if (idRespostaQueEstaCondicionada == resposta.getId()) {
+                    for(Opcao opcao : resposta.getListaOpcoes()){
+                        if(opcao.getValorTexto().equals(text)){
+                            return indice;
+                        }
+                        indice++;
+                    }
+                }
+            }
+
+        return indice;
+    }
     private void verificaCondicionais(int id, String text) {
 
 
         if (mapaPerguntasCondicionais.containsKey(id)) {
-
             int idDependente = mapaPerguntasCondicionais.get(id);
             percorrePerguntas:
             for (Resposta resposta : listaRespostasTotais) {
                 if (idDependente == resposta.getId()) {
                     if (resposta.getCondicao().getValorResposta().equals(text)) {
-                       // Log.i(TAG, String.valueOf(id) + " " + text );
                         View view = findViewById(idDependente);
                         view.setVisibility(View.VISIBLE);
                         break percorrePerguntas;
@@ -505,6 +574,7 @@ Log.i(TAG, resposta.getTipo() + " - " + resposta.getId());
                         desmarcaResposta(idDependente);
                     }
                 }
+
             }
         }
     }
@@ -542,14 +612,56 @@ Log.i(TAG, resposta.getTipo() + " - " + resposta.getId());
         return String.valueOf(fileUri);
     }
 
-    private void mostraFoto(final String caminhoFoto, int id, String titulo) {
+    private void dialogEhParaFotograr(String titulo) {
 
-        final int idInterno = id;
+        Button buttonSelecionar, buttonFotografar;
+        TextView textViewTituloFoto;
+
+        final Dialog dialog = new Dialog(Coletor.this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_selecionar_galeria_foto);
+
+        textViewTituloFoto = (TextView) dialog.findViewById(R.id.text_view_titulo_dialog_galeria_foto);
+        textViewTituloFoto.setText(titulo);
+
+        buttonSelecionar = (Button)dialog.findViewById(R.id.button_selecionar_dialog_galeria_foto);
+        buttonSelecionar.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+            selecionarFotoDaGaleria();
+                dialog.cancel();
+            }
+        });
+
+        buttonFotografar = (Button)dialog.findViewById(R.id.button_fotografar_dialog_galeria_foto);
+        buttonFotografar.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                caminhoFoto = null;
+                String text = tirarFoto(idRespostaParaFoto);
+                caminhoFoto = text;
+                marcaResposta(idRespostaParaFoto, caminhoFoto);
+                dialog.cancel();
+            }
+        });
+        dialog.show();
+    }
+
+    private void selecionarFotoDaGaleria() {
+        Intent i = new Intent(Intent.ACTION_PICK,
+                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        startActivityForResult(i, ACTIVITY_SELECT_IMAGE);
+
+    }
+
+    private void mostraFoto(final String caminhoFoto, int id, final String titulo) {
+
         ImageView imageViewFoto;
         Button buttonManterFoto, buttonTrocarFoto;
         TextView textViewTituloFoto;
 
         final Dialog dialog = new Dialog(Coletor.this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(R.layout.dialog_foto);
         imageViewFoto = (ImageView) dialog.findViewById(R.id.image_view_foto);
         imageViewFoto.setImageURI(Uri.parse(caminhoFoto));
@@ -569,8 +681,8 @@ Log.i(TAG, resposta.getTipo() + " - " + resposta.getId());
         buttonTrocarFoto.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                String text = tirarFoto(idInterno);
-                marcaResposta(idInterno, text);
+
+                dialogEhParaFotograr(titulo);
                 dialog.cancel();
             }
         });
@@ -659,7 +771,9 @@ Log.i(TAG, resposta.getTipo() + " - " + resposta.getId());
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
-        if (requestCode == Constantes.CODIGO_IMAGEM_CAPTURA_FOTO) {
+        switch(requestCode) {
+            case Constantes.CODIGO_IMAGEM_CAPTURA_FOTO:
+
             if (resultCode == RESULT_OK) {
                 if (data == null) {
                     Toast.makeText(getApplicationContext(), Constantes.IMAGEM_SALVA_COM_SUCESSO,
@@ -677,7 +791,32 @@ Log.i(TAG, resposta.getTipo() + " - " + resposta.getId());
                         Toast.LENGTH_LONG).show();
                 desmarcaResposta(idRespostaParaFoto);
             }
+             break;
+            case ACTIVITY_SELECT_IMAGE:
+
+                if(resultCode == RESULT_OK) {
+                    Uri selectedImage = data.getData();
+                    String[] filePathColumn = {MediaStore.Images.Media.DATA};
+
+                    Cursor cursor = getContentResolver().query(selectedImage, filePathColumn, null, null, null);
+                    cursor.moveToFirst();
+
+                    int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+                    String filePath = cursor.getString(columnIndex);
+                    cursor.close();
+                    marcaResposta(idRespostaParaFoto, filePath);
+                }
+                else if (resultCode == RESULT_CANCELED) {
+                    Toast.makeText(getApplicationContext(), Constantes.CANCELADO, Toast.LENGTH_SHORT).show();
+                    desmarcaResposta(idRespostaParaFoto);
+                } else {
+                    Toast.makeText(getApplicationContext(), Constantes.ERRO_AO_SALVAR_IMAGEM,
+                            Toast.LENGTH_LONG).show();
+                    desmarcaResposta(idRespostaParaFoto);
+                }
+                break;
         }
+
     }
 
     private void carregaListas() {

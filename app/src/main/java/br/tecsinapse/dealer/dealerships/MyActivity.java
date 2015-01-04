@@ -6,7 +6,8 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import br.com.dealer.dealerships.R;
-import br.tecsinapse.checklist.Start;
+import br.tecsinapse.checklist.ConectorComponente;
+import br.tecsinapse.checklist.Parametros;
 
 public class MyActivity extends ActionBarActivity {
 
@@ -15,27 +16,26 @@ public class MyActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my);
 
-        Intent irParaModulo = new Intent(MyActivity.this, Start.class);
-        irParaModulo.putExtra("url","www.exemplo.com");//enviar configuracoes, url, tipo, etc.
-        irParaModulo.putExtra("conexao","s3");// irParaModulo.putExtra("conexao","webservice");
-        irParaModulo.putExtra("usuario","x");
+        Parametros parametros = new Parametros(Parametros.TIPO_REST);
+        parametros.setUrlGetUsuarios("http://192.168.2.104:8080/jersey-tutorial/nomes");
+        parametros.setUrlPutIdUsuarioRecebeJson("http://192.168.2.104:8080/jersey-tutorial/json");
+        parametros.setUrlPostJsonResposta("http://192.168.2.104:8080/jersey-tutorial/enviarJson");
+
+
+        Intent irParaModulo = new Intent(MyActivity.this, ConectorComponente.class);
+        irParaModulo.putExtra("parametros",parametros);
 
         startActivity(irParaModulo);
     }
 
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.coletor, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         if (id == R.id.action_settings) {
             return true;

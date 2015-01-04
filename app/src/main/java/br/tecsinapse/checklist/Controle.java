@@ -1,6 +1,7 @@
 package br.tecsinapse.checklist;
 
 import android.content.Context;
+import android.util.Log;
 import br.tecsinapse.checklist.entidades.Categoria;
 import br.tecsinapse.checklist.entidades.ItemChecagemDaCategoria;
 import br.tecsinapse.checklist.entidades.Resposta;
@@ -16,6 +17,7 @@ import org.json.JSONObject;
 public class Controle {
 
 
+    private static final String TAG = "Controle";
     private Context context;
     private DataBaseHelper banco;
     private boolean salvaItem = true;
@@ -36,7 +38,7 @@ public class Controle {
         try {
             retorno = verificaSeItemExisteESalva(json);
         } catch (JSONException e) {
-            e.printStackTrace();
+            Log.e(TAG, e.getMessage());
             return false;
         }
         return retorno;
@@ -67,7 +69,7 @@ public class Controle {
                     salvouItem = SalvarItem(jsonObjetosUnicos, tituloChecagem, idExterno, nomeApp, data);
                 }
                 catch (Exception e){
-                    e.printStackTrace();
+                    Log.e(TAG, e.getMessage());
                     salvouItem = false;
                 }
             }
@@ -86,7 +88,7 @@ public class Controle {
                 return salvouItem;
             }
             catch (Exception e){
-                e.printStackTrace();
+                Log.e(TAG, e.getMessage());
                 salvouItem = false;
             }
         return salvouItem;
@@ -108,7 +110,7 @@ public class Controle {
             return salvouCategorias;
         }
         catch (Exception e){
-            e.printStackTrace();
+            Log.e(TAG, e.getMessage());
             salvouCategorias = false;
         }
         return salvouCategorias;
@@ -179,7 +181,7 @@ public class Controle {
             salvouRespostaDoItem = true;
         }
         catch (Exception e){
-            e.printStackTrace();
+            Log.e(TAG, e.getMessage());
             salvouRespostaDoItem = false;
         }
         return  salvouRespostaDoItem;
@@ -228,7 +230,7 @@ public class Controle {
             jsonValoresItemChecagem.put(JsonConstantes.JSON_APP_NOME, nomeApp);
 
         } catch (JSONException e) {
-            e.printStackTrace();
+            Log.e(TAG, e.getMessage());
         }
 
         arrayPrincipal.put(jsonValoresItemChecagem);
@@ -246,7 +248,7 @@ public class Controle {
                     arrayItensDaCategoria.put(jsonValoresItemChecagemDaCategoria);
 
                 } catch (JSONException e) {
-                    e.printStackTrace();
+                    Log.e(TAG, e.getMessage());
                 }
                 List<Resposta> listaPerguntasDoItem = banco.obterListaRespostasDoItem(itemChecagemDaCategoria.getId());
                 arrayRespostas = new JSONArray();
@@ -261,7 +263,7 @@ public class Controle {
                             jsonValoresRespostas.put(JsonConstantes.JSON_RESPOSTA, resposta.getValorResposta());
                             arrayRespostas.put(jsonValoresRespostas);
                         } catch (JSONException e) {
-                            e.printStackTrace();
+                            Log.e(TAG, e.getMessage());
                         }
                     }
                 }
@@ -270,20 +272,20 @@ public class Controle {
                     jsonRespostas.put(JsonConstantes.JSON_VALORES, arrayRespostas);
                     arrayItensDaCategoria.put(jsonRespostas);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    Log.e(TAG, e.getMessage());
                 }
             }
             try {
                 jsonItensDaCategoria.put(JsonConstantes.JSON_RESPOSTAS, arrayItensDaCategoria);
                 arrayPrincipal.put(jsonItensDaCategoria);
             } catch (Exception e) {
-                e.printStackTrace();
+                Log.e(TAG, e.getMessage());
             }
         }
         try {
             jsonPrincipal.put(JsonConstantes.JSON_CHECKLISTS_RESPOSTAS, arrayPrincipal);
         } catch (JSONException e) {
-            e.printStackTrace();
+            Log.e(TAG, e.getMessage());
         }
         return jsonPrincipal;
     }

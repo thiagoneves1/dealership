@@ -1,5 +1,11 @@
 package br.tecsinapse.dealer.dealerships;
 
+import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.Response;
+
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -10,11 +16,13 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
+import android.widget.Toast;
 import br.com.dealer.dealerships.R;
 import br.tecsinapse.checklist.Configuracao;
 import br.tecsinapse.checklist.Constantes;
 import br.tecsinapse.checklist.Controle;
 import br.tecsinapse.checklist.DataBaseHelper;
+import br.tecsinapse.checklist.ListaItens;
 import br.tecsinapse.checklist.Sincronizar;
 import br.tecsinapse.checklist.Utils;
 import java.io.File;
@@ -28,17 +36,26 @@ import org.json.JSONObject;
 
 public class JsonResposta extends ActionBarActivity {
     private Bundle extras;
-    EditText editTextResposta;
-    private Utils conversor;
-    DataBaseHelper banco;
-    List<Integer> listaIDsFoto;
-    List<String> listaCaminhosFoto;
-    int idExterno = 0;
-    ProgressDialog progressBar;
-    boolean criarArquivosFotosBase64 = false;
-    boolean criarArquivosFotosSHA1 = false;
-    boolean criarArquivoJsonUnico = false;
-    boolean criarArquivoUnicoIDDevice = false;
+    private EditText editTextResposta;
+    private Utils utils;
+    private DataBaseHelper banco;
+    private List<Integer> listaIDsFoto;
+    private List<String> listaCaminhosFoto;
+    private int idExterno = 0;
+    private ProgressDialog progressBar;
+    private boolean criarArquivosFotosBase64 = false;
+    private boolean criarArquivosFotosSHA1 = false;
+    private boolean criarArquivoJsonUnico = false;
+    private Controle controle;
+    private String base64;
+    private OkHttpClient client;
+    private String TAG = "JsonResposta";
+    private String SHA1;
+    private String urlPostJsonRespostas;
+    private JSONObject jsonResposta;
+    private String resposta;
+    public static final MediaType JSON
+            = MediaType.parse("application/json; charset=utf-8");
 
 
     @Override
@@ -49,9 +66,10 @@ public class JsonResposta extends ActionBarActivity {
 
         setContentView(R.layout.activity_resposta);
 
-        conversor = new Utils(JsonResposta.this);
+        utils = new Utils(JsonResposta.this);
 
         banco = new DataBaseHelper(getApplicationContext());
+        urlPostJsonRespostas = banco.getUrlPostJsonResposta();
 
         listaIDsFoto = new ArrayList<Integer>();
         listaCaminhosFoto = new ArrayList<String>();
@@ -124,18 +142,23 @@ public class JsonResposta extends ActionBarActivity {
         @Override
         protected Void doInBackground(Void... arg0) {
 
-            processamentoPrincipal();
+            try {
+                processamentoPrincipal();
+            } catch (IOException e) {
+                e.printStackTrace();
+                Log.i(TAG + "erro", e.getMessage());
+            }
 
-            return null;
+           return null;
         }
 
-        public void processamentoPrincipal() {
+        public void processamentoPrincipal() throws IOException {
             try {
 
                 String nomeApp = banco.obterNomeApp(idExterno);
-                Controle controle = new Controle(getApplicationContext());
+                controle = new Controle(getApplicationContext());
 
-                JSONObject jsonResposta = controle.obterJsonRespostas(nomeApp);
+                jsonResposta = controle.obterJsonRespostas(nomeApp);
                 criarArquivoJsonUnico = escreverArquivo(jsonResposta.toString(), "jsonResposta.txt");
 
                 int idItemChecagem = banco.obterIdItemChecagem(nomeApp);
@@ -152,21 +175,20 @@ public class JsonResposta extends ActionBarActivity {
 
                 if (file.exists()) {
 
-                    String SHA1 = "";
+
                     try {
-                        SHA1 = conversor.gerarSHA1(file);
+                        SHA1 = utils.gerarSHA1(file);
                     } catch (NoSuchAlgorithmException e) {
                         e.printStackTrace();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
 
-                    String base64 = conversor.converteImagemParaString(file);
+                     base64 = utils.converteImagemParaString(file);
 
                     Log.i("tamanho arquivo", String.valueOf(file.length()));
 
                     criarArquivosFotosSHA1 = escreverArquivo(SHA1, "SHA1_" + string + ".txt");
-                    criarArquivosFotosBase64 = escreverArquivo(base64, "Base64_" + string + ".txt");
 
                 } else {
                     Log.i("arquivo nao criado", "erroa o criar arquivo");
@@ -183,6 +205,9 @@ public class JsonResposta extends ActionBarActivity {
                 e.printStackTrace();
             }
 
+          resposta =   enviaJsonResposta(urlPostJsonRespostas, jsonResposta.toString());
+            Log.i(TAG + "3", resposta);
+
         }
 
 
@@ -195,33 +220,38 @@ public class JsonResposta extends ActionBarActivity {
         protected void onPostExecute(Void result) {
             super.onPostExecute(result);
 
-
+            Log.i(TAG + "2", resposta);
             progressBar.dismiss();
 
-            if (criarArquivoJsonUnico) {
-                editTextResposta.append("\n" +
-                        " arquivo 'json_resposta.txt' (resposta formatada anteriormente) - criado com sucesso ");
-            } else {
-                editTextResposta.append("\n" +
-                        " arquivo 'json_resposta.txt' (resposta formatada anteriormente) - Nao criado Erro ");
+            if(resposta.equals("Json recebido com sucesso")){
+                banco.atualizaStatusSincronizadoDoitem(idExterno);
+                Toast.makeText(JsonResposta.this, "Sincronizacao Efetuada com sucesso", Toast.LENGTH_LONG).show();
+                Intent irParaLista = new Intent(JsonResposta.this, ListaItens.class);
+                startActivity(irParaLista);
             }
 
-                if (criarArquivosFotosSHA1) {
-                    editTextResposta.append("\n arquivos 'SHA1_...txt' (valor para checksum) - criados com sucesso SHA1");
-                } else {
-                    editTextResposta.append("\n arquivos 'SHA1' (valor para checksum) - Nao criados Erro");
-                }
-
-
-                if (criarArquivosFotosBase64) {
-                    editTextResposta.append("\n" +
-                            "  arquivos 'Base64_...txt' (Valor Hash Fotos) -  criados com sucesso");
-                } else {
-                    editTextResposta.append("\n" +
-                            "  arquivos 'Base64_...txt' (Valor Hash Fotos) -  Nao criados Erro");
-                }
             }
+
+
         }
+
+    private String enviaJsonResposta(String url, String json) throws IOException {
+        client = new OkHttpClient();
+
+        RequestBody body = RequestBody.create(JSON, json);
+
+        Request request = new Request.Builder()
+                .url(url)
+                .post(body)
+                .build();
+
+        Response response = null;
+
+
+            response = client.newCall(request).execute();
+            return response.body().string();
+
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

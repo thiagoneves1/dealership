@@ -19,6 +19,7 @@ import java.util.List;
 
 public class ListaItens extends ActionBarActivity {
 
+    public static final String TAG = "ListaItens";
     private List<ItemChecagem> listaItemChecagem = new ArrayList<ItemChecagem>();
     private DataBaseHelper banco;
     private ListView listViewTitulos;
@@ -60,6 +61,7 @@ public class ListaItens extends ActionBarActivity {
         this.banco = new DataBaseHelper(this);
         listaIdExterno = banco.obterListaIdExterno();
         listaItemChecagem = banco.obterListaItemChecagem();
+        Log.i(TAG, String.valueOf(listaItemChecagem.size()));
 
         final ListaItensAdapter adapter = new ListaItensAdapter(ListaItens.this, listaItemChecagem);
 

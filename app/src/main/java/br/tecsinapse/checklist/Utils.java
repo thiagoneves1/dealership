@@ -3,6 +3,7 @@ package br.tecsinapse.checklist;
 import android.content.Context;
 import android.os.Build;
 import android.util.Base64;
+import android.util.Log;
 import br.com.dealer.dealerships.R;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
@@ -18,6 +19,7 @@ import java.util.UUID;
 
 
 public class Utils {
+    private static final String TAG = "Utils";
     Context context;
 
     public Utils(Context context) {
@@ -62,7 +64,7 @@ public class Utils {
             }
             inputStream.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e(TAG, e.getMessage());
         }
         return byteArrayOutputStream.toString();
     }
@@ -78,9 +80,9 @@ public class Utils {
             stringDadosImagem = encodeImage(imageData);
 
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            Log.e(TAG, e.getMessage());
         } catch (IOException ioe) {
-            ioe.printStackTrace();
+            Log.e(TAG, ioe.getMessage());
         }
         return stringDadosImagem;
     }

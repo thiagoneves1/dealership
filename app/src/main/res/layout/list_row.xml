@@ -4,7 +4,7 @@
               android:orientation="horizontal"
               android:layout_width="match_parent"
               android:layout_height="wrap_content"
-              android:padding="3dp"
+              android:padding="4dp"
 
 
     >
@@ -34,11 +34,11 @@
 
     <TextView
         android:background="@color/cinza_escuro"
-        android:textColor="@color/amarelo"
+        android:textColor="@color/vermelho"
         android:padding="10dp"
         android:layout_width="25dp"
         android:layout_height="wrap_content"
-        android:text="120%"
+        android:text="20%"
         android:textSize="17dp"
         android:layout_weight="1"
         android:gravity="right"

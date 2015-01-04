@@ -19,5 +19,21 @@
     <string name="cancelar">Cancelar</string>
     <string name="title_activity_my">QUESTIONARIOS</string>
     <string name="title_activity_configuracao">Configuracao</string>
+    <string name="fotografar">Fotografar</string>
+    <string name="selecionar">Selecionar</string>
+
+
+    <string-array name="planets_array">
+        <item>Mercury</item>
+        <item>Venus</item>
+        <item>Earth</item>
+        <item>Mars</item>
+        <item>Jupiter</item>
+        <item>Saturn</item>
+        <item>Uranus</item>
+        <item>Neptune</item>
+    </string-array>
 
 </resources>
+
+

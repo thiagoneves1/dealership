@@ -1,0 +1,28 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="br.com.coletor.ColetorMovel.Coletor">
+
+<TextView
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="Item ja verificado\n"
+    android:gravity="center"
+    android:padding="10dp"
+    android:id="@+id/text_json"/>
+
+    <Button
+        android:id="@+id/btn_ver_resposta"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Visualizar Json de Resposta"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/txt_json_sincronizar"
+        android:text="@string/sincronizar"/>
+
+</LinearLayout>

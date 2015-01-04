@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="horizontal"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@color/cinza"
+        android:layout_weight="1"
+        >
+        <RadioGroup
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <RadioButton
+                android:layout_width="match_parent"
+                android:layout_height="38dp"
+                android:background="@color/ghostwhite"
+                android:layout_marginBottom="2dp"
+                android:layout_marginLeft="2dp"
+                android:layout_marginTop="2dp"
+                android:text="OK"
+                android:checked="false"
+                android:id="@+id/abdeeeef"/>
+            <RadioButton
+                android:layout_width="match_parent"
+                android:layout_height="38dp"
+                android:background="@color/ghostwhite"
+                android:layout_marginBottom="2dp"
+                android:layout_marginLeft="2dp"
+                android:layout_marginTop="2dp"
+                android:text="N-OK"/>
+            <RadioButton
+                android:layout_width="match_parent"
+                android:layout_height="38dp"
+                android:background="@color/ghostwhite"
+                android:layout_marginBottom="2dp"
+                android:layout_marginLeft="2dp"
+                android:layout_marginTop="2dp"
+                android:text="N-A"/>
+        </RadioGroup>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@color/cinza"
+        android:layout_weight="1"
+        >
+
+
+        <LinearLayout
+
+
+            android:layout_width="match_parent"
+            android:layout_height="38dp"
+            android:orientation="horizontal"
+            android:layout_marginBottom="2dp"
+            android:layout_marginRight="2dp"
+            android:layout_marginTop="2dp"
+            android:background="@color/ghostwhite"
+            android:id="@+id/asdffff">
+
+        </LinearLayout>
+
+        <LinearLayout
+
+
+            android:layout_width="match_parent"
+            android:layout_height="38dp"
+            android:orientation="horizontal"
+            android:layout_marginRight="2dp"
+            android:layout_marginTop="2dp"
+            android:layout_marginBottom="2dp"
+            android:background="@color/ghostwhite"
+            android:id="@+id/aasdddf">
+            <Spinner
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:entries="@array/planets_array"></Spinner>
+        </LinearLayout>
+        <LinearLayout
+
+
+            android:layout_width="match_parent"
+            android:layout_height="38dp"
+            android:orientation="horizontal"
+            android:layout_marginBottom="2dp"
+            android:layout_marginRight="2dp"
+            android:layout_marginTop="2dp"
+            android:background="@color/ghostwhite"
+            android:id="@+id/dasdf">
+
+        </LinearLayout>
+    </LinearLayout>
+
+
+</LinearLayout>

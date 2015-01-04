@@ -12,6 +12,7 @@
         android:layout_height="wrap_content"
         android:text="@string/title_activity_my"
         android:gravity="center"
+        android:layout_margin="4dp"
         android:textSize="17dp"
         android:id="@+id/text_view_quantidade_respondido"/>
     <ListView

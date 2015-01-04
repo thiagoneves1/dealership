@@ -20,6 +20,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 
     private static final int VERSAO_BANCO = 1;
     private static final String NOME_BANCO = "bancoModulo";
+    private static final String TAG = "DataBaseHelper";
 
     public DataBaseHelper(Context context) {
         super(context, NOME_BANCO, null, VERSAO_BANCO);
@@ -29,7 +30,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         String sqlItem = "CREATE TABLE IF NOT EXISTS itemChecagem " +
                 "(id INTEGER PRIMARY KEY, " +
-                "idExterno INTEGER, tituloItem TEXT, app TEXT, status INTEGER, data TEXT, progresso INTEGER)";
+                "idExterno INTEGER, tituloItem TEXT, app TEXT, status INTEGER DEFAULT 0, data TEXT, progresso INTEGER DEFAULT 0, sincronizado INTEGER DEFAULT 0)";
 
         String sqlCategoria = "CREATE TABLE IF NOT EXISTS categoria" +
                 "(id INTEGER PRIMARY KEY, " +
@@ -44,7 +45,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         String sqlPergunta = "CREATE TABLE IF NOT EXISTS valorResposta " +
                 "(id INTEGER PRIMARY KEY, idExterno INTEGER, idItemDaCategoria " +
                 "INTEGER, tipo TEXT, opcional INTEGER, condicional INTEGER, " +
-                "respondida INTEGER, valorResposta TEXT, " +
+                "respondida INTEGER DEFAULT 0, valorResposta TEXT, " +
                 "FOREIGN KEY(idItemDaCategoria) REFERENCES itemDaCategoria(id))";
 
         String sqlOpcao = "CREATE TABLE IF NOT EXISTS opcao " +
@@ -62,9 +63,12 @@ public class DataBaseHelper extends SQLiteOpenHelper {
                 "caminhoArquivo TEXT, FOREIGN KEY(idItemChecagem) REFERENCES itemChecagem(id))";
 
         String sqlIdEUsuario =  "CREATE TABLE IF NOT EXISTS identificacao " +
-                "(id INTEGER PRIMARY KEY, deviceId TEXT," +
+                "(id INTEGER PRIMARY KEY, idDevice TEXT," +
                 "usuario TEXT)";
 
+        String sqlUrls = "CREATE TABLE IF NOT EXISTS urls" +
+                "(id INTEGER PRIMARY KEY, tipo TEXT, urlGetUsuarios TEXT," +
+                "urlPutIdUsuarioRecebeJson TEXT, urlPostJsonResposta TEXT)";
 
         db.execSQL(sqlItem);
         db.execSQL(sqlCategoria);
@@ -74,8 +78,9 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         db.execSQL(sqlCondicao);
         db.execSQL(sqlFotos);
         db.execSQL(sqlIdEUsuario);
+        db.execSQL(sqlUrls);
 
-        Log.i("BANCO", "BANCO CRIADO COM SUCESSO");
+        Log.i(TAG, "BANCO CRIADO COM SUCESSO");
     }
 
     @Override
@@ -112,7 +117,6 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         String query = "SELECT usuario FROM identificacao" ;
         Cursor cursor = db.rawQuery(query, null);
-        Log.i("cursor",String.valueOf(cursor.getCount()));
         if(cursor.getCount() > 0) {
             cursor.moveToNext();
             String usuario = cursor.getString(0);
@@ -131,14 +135,23 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         return false;
     }
 
-    public void insereDeviceIdEUsuario(String deviceId, String usuario){
+    public void insereUrls(String tipo, String urlGetUsuarios, String urlPutIdUsuarioRecebeJson, String urlPostJsonResposta){
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
-        values.put("deviceId",deviceId);
+        values.put("tipo",tipo);
+        values.put("urlGetUsuarios",urlGetUsuarios);
+        values.put("urlPutIdUsuarioRecebeJson",urlPutIdUsuarioRecebeJson);
+        values.put("urlPostJsonResposta",urlPostJsonResposta);
+        db.insert("urls", null, values);
+        db.close();
+    }
+    public void insereDeviceIdEUsuario(String idDevice, String usuario){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("idDevice",idDevice);
         values.put("usuario", usuario);
         db.insert("identificacao", null, values);
         db.close();
-
 
     }
     public void insereIdECaminhoFoto(int idRespostaParaFoto, String caminhoFoto) {
@@ -159,9 +172,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         values.put("idExterno", idExterno);
         values.put("tituloItem", tituloChecagem);
         values.put("app", app);
-        values.put("status", Constantes.VALOR_INICIAL_STATUS);//sempre com status 0
         values.put("data", data);
-        values.put("progresso", Constantes.VALOR_INICIAL_PROGRESSO_ITEM);
         retorno = db.insert("itemChecagem", null, values);
         db.close();
         return retorno;
@@ -318,7 +329,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
     public List<ItemChecagem> obterListaItemChecagem() {
         List<ItemChecagem> listaItemChecagem = new ArrayList<ItemChecagem>();
         SQLiteDatabase db = this.getWritableDatabase();
-        String query = "SELECT * FROM itemChecagem";
+        String query = "SELECT * FROM itemChecagem WHERE sincronizado = 0";
         Cursor cursor = db.rawQuery(query, null);
         while (cursor.moveToNext()) {
             ItemChecagem itemChecagem = new ItemChecagem();
@@ -359,7 +370,6 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         values.put("tipo", tipo);
         values.put("opcional", valorOpcional);
         values.put("condicional", valorCondicional);
-        values.put("respondida", 0);//default
         retorno = db.insert("valorResposta", null, values);
         db.close();
         return retorno;
@@ -403,6 +413,15 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put("status", 1);
+        db.update("itemChecagem", values, filtro, null);
+        db.close();
+    }
+
+    public void atualizaStatusSincronizadoDoitem(int idExterno) {
+        String filtro = "idExterno=" + idExterno;
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("sincronizado", 1);
         db.update("itemChecagem", values, filtro, null);
         db.close();
     }
@@ -455,5 +474,70 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         }
         db.close();
         return null;
+    }
+
+    public String getUrlPutIdUsuarioRecebeJson() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String query = "SELECT urlPutIdUsuarioRecebeJson FROM urls";
+        Cursor cursor = db.rawQuery(query, null);
+        if (cursor != null) {
+            cursor.moveToFirst();
+            return cursor.getString(0);
+        }
+        db.close();
+        return null;
+        
+    }
+
+    public String getUrlUsuarios() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String query = "SELECT urlGetUsuarios FROM urls";
+        Cursor cursor = db.rawQuery(query, null);
+        if (cursor != null) {
+            cursor.moveToFirst();
+            return cursor.getString(0);
+        }
+        db.close();
+        return null;
+
+    }
+
+    public String getUrlPostJsonResposta() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String query = "SELECT urlPostJsonResposta FROM urls";
+        Cursor cursor = db.rawQuery(query, null);
+        if (cursor != null) {
+            cursor.moveToFirst();
+            return cursor.getString(0);
+        }
+        db.close();
+        return null;
+
+    }
+
+    public String getIdDevice() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String query = "SELECT idDevice FROM identificacao";
+        Cursor cursor = db.rawQuery(query, null);
+        if (cursor != null) {
+            cursor.moveToFirst();
+            return cursor.getString(0);
+        }
+        db.close();
+        return null;
+        
+    }
+
+    public String getUsuario() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String query = "SELECT usuario FROM identificacao";
+        Cursor cursor = db.rawQuery(query, null);
+        if (cursor != null) {
+            cursor.moveToFirst();
+            return cursor.getString(0);
+        }
+        db.close();
+        return null;
+        
     }
 }

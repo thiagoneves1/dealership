@@ -44,7 +44,7 @@ public class ListaItensAdapter extends ArrayAdapter<ItemChecagem> {
         }
 
         if (itemChecagem.getStatus() == Constantes.VALOR_ITEM_JA_VERIFICADO_TRUE) {
-            textViewProgresso.setTextColor(context.getResources().getColor(Constantes.COR_AZUL_CLARO));
+            textViewProgresso.setTextColor(context.getResources().getColor(Constantes.COR_AZUL_ESCURO));
         }
 
         textViewProgresso.setText(String.valueOf(itemChecagem.getProgresso() + " %"));

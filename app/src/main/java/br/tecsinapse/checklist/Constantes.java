@@ -25,6 +25,7 @@ public class Constantes {
     public static final int COR_AMARELO = R.color.amarelo;
     public static final int COR_AZUL_CLARO = R.color.azul_claro;
     public static final int COR_CINZA_ESCURO = R.color.cinza_escuro;
+    public static final int COR_AZUL_ESCURO =  R.color.azul_escuro;
     public static final int VALOR_CONDICIONAL_FALSE = 0;
     public static final int VALOR_CONDICIONAL_TRUE = 1;
     public static final int VALOR_ITEM_JA_VERIFICADO_TRUE = 1;
@@ -42,6 +43,7 @@ public class Constantes {
     public static final String MOBILE_CONECTADO = "Device Conectado";
     public static final String USUÁRIO_SALVO_COM_SUCESSO = "Usuário Salvo Com Sucesso";
     public static final String FORMATO_DATA = "dd/MM/yyyy";
-    public static final int DIFERENCA_ID_OPCOES_RADIO = 500; //precisa setar id das opções radio, para evitar conflito.
-
+    public static final int DIFERENCA_ID_OPCOES_RADIO = 90; //precisa setar id das opções radio, para evitar conflito.
+    public static final String SALVAR = "Salvar";
+    public static final int DIFERENCA_ID_LAYOUT_SPINNER = 110;
 }

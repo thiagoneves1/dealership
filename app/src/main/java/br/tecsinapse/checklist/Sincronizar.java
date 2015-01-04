@@ -1,5 +1,9 @@
 package br.tecsinapse.checklist;
 
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
+
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -33,6 +37,8 @@ public class Sincronizar extends ActionBarActivity {
     private static boolean deviceConectado = false;
     private Button buttonSincronizar;
     private EditText editResult;
+    private  OkHttpClient client;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,7 +74,9 @@ public class Sincronizar extends ActionBarActivity {
             if(wifiConnectedo) {
                 Log.i(TAG, Constantes.WIFI_CONECTADO);
                 Toast.makeText(getApplicationContext(),Constantes.WIFI_CONECTADO,Toast.LENGTH_SHORT ).show();
-                new DownloadJsonAsyncTask().execute("http://reqr.es/api/users?page=2");
+               new DownloadJsonAsyncTask().execute("http://reqr.es/api/users?page=2");
+
+
             } else if (deviceConectado){
                 Log.i(TAG, Constantes.MOBILE_CONECTADO);
                 Toast.makeText(getApplicationContext(),Constantes.MOBILE_CONECTADO,Toast.LENGTH_SHORT ).show();
@@ -116,9 +124,38 @@ public class Sincronizar extends ActionBarActivity {
                     ProgressDialog.show(Sincronizar.this, "Aguarde", "Baixando JSON, Por Favor Aguarde...");
         }
         @Override
-        protected String doInBackground(String... urls) {
+        protected String doInBackground(String... urls)  {
 
-            return GET(urls[0]);
+             client = new OkHttpClient();
+
+
+            // Create request for remote resource.
+            Request request = new Request.Builder()
+                    .url(urls[0])
+                    .build();
+
+            Response response = null;
+            try {
+
+                    response = client.newCall(request).execute();
+                    Log.i(TAG, response.body().string());
+                   // return response.body().string();
+
+                return response.body().string();
+            }
+            catch (Exception e){
+                Log.i(TAG, e.getMessage());
+            }
+
+           return GET(urls[0]);
+
+            //post
+//            try {
+//                return run(urls[0]);
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//            return  null;
         }
 
         @Override
@@ -129,9 +166,20 @@ public class Sincronizar extends ActionBarActivity {
         }
     }
 
+
+
+
     private String GET(String url) {
+
+
+
+
+
+//SOMENTE GET
         InputStream inputStream;
         String result = "";
+
+
         try {
 
             HttpClient httpclient = new DefaultHttpClient();
@@ -139,7 +187,6 @@ public class Sincronizar extends ActionBarActivity {
             HttpResponse httpResponse = httpclient.execute(new HttpGet(url));
 
             inputStream = httpResponse.getEntity().getContent();
-
 
             if(inputStream != null) {
                 result = converterInputStreamParaString(inputStream);
@@ -149,10 +196,22 @@ public class Sincronizar extends ActionBarActivity {
             }
 
         } catch (Exception e) {
-            Log.d(TAG, e.getLocalizedMessage());
+            Log.e(TAG, e.getMessage());
         }
 
         return result;
+    }
+
+
+
+    String run(String url) throws IOException {
+
+        Request request = new Request.Builder()
+                .url(url)
+                .build();
+
+        Response response = client.newCall(request).execute();
+        return response.body().string();
     }
 
     private static String converterInputStreamParaString(InputStream inputStream) throws IOException {
